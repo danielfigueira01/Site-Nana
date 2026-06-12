@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Gerencial - Nana Moda Íntima</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="logo.jpg" type="image/jpeg">
+    
+    <!-- CSS Link -->
+    <link rel="stylesheet" href="index.css">
+    
+    <!-- Google Identity Services SDK -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    
+    <!-- Custom Admin Page Styles -->
+    <style>
+        .admin-page-header {
+            background-color: var(--bg-off-white);
+            border-bottom: 1px solid var(--border-color);
+            padding: 20px 0;
+            margin-bottom: 2rem;
+        }
+        .admin-header-flex {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .btn-back-site {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: var(--primary-color);
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: var(--transition);
+        }
+        .btn-back-site:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        .admin-main-card {
+            background-color: var(--bg-off-white);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 3rem;
+        }
+        .admin-page-title-row {
+            margin-bottom: 1.5rem;
+        }
+        .admin-page-title-row h2 {
+            font-size: 1.5rem;
+            color: var(--primary-dark);
+            font-weight: 800;
+        }
+        .admin-page-title-row p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        
+        /* --- Login Screen Styling --- */
+        .login-card {
+            transition: var(--transition);
+        }
+        .login-card input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(185, 124, 120, 0.15);
+        }
+        
+        /* --- Image Gallery Manager --- */
+        .image-previews-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+            border: 1px dashed var(--border-color);
+            border-radius: var(--border-radius-md);
+            padding: 12px;
+            background-color: #fdfdfd;
+            min-height: 110px;
+        }
+        .image-preview-card {
+            position: relative;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-sm);
+            overflow: hidden;
+            background-color: white;
+            aspect-ratio: 3/4;
+            display: flex;
+            flex-direction: column;
+            transition: var(--transition);
+        }
+        .image-preview-card:hover {
+            box-shadow: var(--shadow-sm);
+            transform: translateY(-1px);
+        }
+        .image-preview-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            flex-grow: 1;
+            background-color: #f5f5f5;
+        }
+        .image-preview-controls {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-top: 1px solid var(--border-color);
+            padding: 4px;
+        }
+        .image-preview-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: var(--transition);
+            width: 24px;
+            height: 24px;
+        }
+        .image-preview-btn:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        .image-preview-btn svg {
+            width: 14px;
+            height: 14px;
+            fill: var(--text-muted);
+        }
+        .image-preview-btn.delete-btn svg {
+            fill: #dc3545;
+        }
+        
+        /* --- Users Tab Styling --- */
+        .user-type-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .user-type-badge.google {
+            background-color: #e8f0fe;
+            color: #1a73e8;
+        }
+        .user-type-badge.credentials {
+            background-color: #fce8e6;
+            color: #d93025;
+        }
+        .user-role-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .user-role-badge.admin {
+            background-color: #e6f4ea;
+            color: #137333;
+        }
+        .user-role-badge.collaborator {
+            background-color: #f1f3f4;
+            color: #3c4043;
+        }
+        
+        /* Modal do Usuário */
+        .admin-modal-user {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(78, 52, 46, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 400;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .admin-modal-user.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+ 
+    <!-- --- Login Screen --- -->
+    <div id="admin-login-screen" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background-color: var(--bg-primary); padding: 20px;">
+        <div class="login-card" style="background-color: var(--bg-off-white); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); box-shadow: var(--shadow-md); padding: 40px; width: 100%; max-width: 420px; text-align: center;">
+            <img src="logo.jpg" alt="Logo Nana" style="height: 60px; width: auto; margin-bottom: 20px;">
+            <h2 style="color: var(--primary-dark); font-weight: 800; margin-bottom: 8px;">Painel Gerencial</h2>
+            <p id="login-welcome-msg" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">Faça login para gerenciar o catálogo.</p>
+            
+            <!-- Setup do Primeiro Admin (Oculto por padrão, exibido se db_usuarios_vazio) -->
+            <div id="admin-setup-msg" style="display: none; background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px; border-radius: var(--border-radius-sm); font-size: 0.8rem; margin-bottom: 20px; font-weight: 600; text-align: left; line-height: 1.4;">
+                ⚠️ CONFIGURAÇÃO INICIAL: Nenhum usuário cadastrado. O primeiro login (Google ou Conta Local criada abaixo) se tornará o Administrador principal.
+            </div>
+            
+            <!-- --- Login Google --- -->
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 25px; width: 100%;">
+                <!-- Container Oficial Google (Exibido se http/https) -->
+                <div id="google-real-container" style="display: none; width: 100%;">
+                    <div id="google-signin-btn" style="display: flex; justify-content: center;"></div>
+                </div>
+                
+                <!-- Container Simulado (Exibido se file://) -->
+                <div id="google-mock-container" style="display: none; width: 100%;">
+                    <button type="button" onclick="handleMockLogin()" class="btn-checkout-link" style="background-color: #4285F4; color: #ffffff; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin: 0; padding: 12px;">
+                        <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;"><path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.113-5.136 4.113-3.072 0-5.561-2.49-5.561-5.56s2.49-5.56 5.56-5.56c1.354 0 2.58.484 3.544 1.286l3.12-3.12c-1.996-1.86-4.57-3.003-7.224-3.003C6.732 2.545 2 7.277 2 13.087s4.732 10.54 10.54 10.54c5.783 0 10.428-4.717 10.428-10.54 0-.61-.06-1.21-.17-1.802H12.24z"/></svg>
+                        Acessar com E-mail Google
+                    </button>
+                    <span style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px; display: block;">Nota: O login real do Google exige execução via servidor local.</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; position: relative;">
+                <hr style="width: 100%; border: 0; border-top: 1px solid var(--border-color);">
+                <span style="position: absolute; background-color: var(--bg-off-white); padding: 0 12px; font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">OU CREDENCIAIS LOCAIS</span>
+            </div>
+            
+            <!-- --- Login Usuário/Senha --- -->
+            <form id="admin-login-form">
+                <div class="form-group" style="text-align: left; margin-bottom: 12px;">
+                    <label for="login-username" style="font-weight: 600; font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Usuário / E-mail</label>
+                    <input type="text" id="login-username" required placeholder="Digite seu e-mail ou usuário" style="width: 100%; padding: 10px 16px; border: 1px solid var(--border-color); border-radius: 50px; background-color: white;">
+                </div>
+                <div class="form-group" style="text-align: left; margin-bottom: 20px;">
+                    <label for="login-password" style="font-weight: 600; font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Senha</label>
+                    <input type="password" id="login-password" required placeholder="Digite a senha" style="width: 100%; padding: 10px 16px; border: 1px solid var(--border-color); border-radius: 50px; background-color: white;">
+                </div>
+                <button type="submit" id="btn-login-submit" class="btn-checkout-link" style="width: 100%; padding: 12px; font-weight: 700; margin-bottom: 0;">Entrar com Usuário Local</button>
+            </form>
+            <p id="login-error-msg" style="color: #dc3545; font-size: 0.8rem; margin-top: 15px; display: none; font-weight: 600;">Acesso negado: Usuário incorreto ou e-mail não autorizado.</p>
+            <div style="margin-top: 25px; font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
+                Acesso restrito para administradores da loja.<br>
+                <span style="font-weight: 600;">Usuário padrão: <code style="background: #eee; padding: 2px 6px; border-radius: 3px;">adm</code> | Senha padrão: <code style="background: #eee; padding: 2px 6px; border-radius: 3px;">nana</code></span>
+            </div>
+        </div>
+    </div>
+ 
+    <div id="admin-dashboard-layout" style="display: none;">
+        <!-- --- Admin Header --- -->
+        <header class="admin-page-header">
+            <div class="container admin-header-flex">
+                <!-- Brand Logo -->
+                <div class="logo-area">
+                    <img class="logo-img" src="logo.jpg" alt="Nana Moda Íntima Logo">
+                    <div class="logo-text">
+                        <h1 style="font-size: 1.35rem; font-weight:800; color: var(--primary-dark);">Nana</h1>
+                        <p style="font-size:0.7rem; color: var(--text-muted); letter-spacing:1.5px; text-transform:uppercase;">Painel Gerencial</p>
+                    </div>
+                </div>
+                
+                <!-- Back & Logout buttons -->
+                <div style="display: flex; gap: 10px;">
+                    <a href="index.html" class="btn-back-site">
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+                        <span>Ver Loja</span>
+                    </a>
+                    <button id="btn-logout" class="btn-back-site" style="background-color: transparent; border: 1px solid var(--border-color); color: var(--text-muted); cursor: pointer;">
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor;"><path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/></svg>
+                        <span>Sair</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+    <!-- --- Main Dashboard Container --- -->
+    <main class="container">
+        <div class="admin-page-title-row">
+            <h2>Gerenciamento do Catálogo</h2>
+            <p>Cadastre novos produtos, atualize preços e descrições ou gerencie o estoque da sua loja.</p>
+        </div>
+        
+        <div class="admin-main-card">
+            <!-- Navigation Tabs -->
+            <div class="admin-tabs-nav">
+                <button class="admin-tab-btn active" onclick="switchAdminTab('list')" id="tab-btn-list">Produtos Cadastrados</button>
+                <button class="admin-tab-btn" onclick="switchAdminTab('form')" id="tab-btn-form">Cadastrar Novo Produto</button>
+                <button class="admin-tab-btn" onclick="switchAdminTab('banners')" id="tab-btn-banners">Gerenciar Banners</button>
+                <button class="admin-tab-btn" onclick="switchAdminTab('users')" id="tab-btn-users" style="display: none;">Usuários & Permissões</button>
+                <button class="admin-tab-btn" onclick="switchAdminTab('backup')" id="tab-btn-backup">Backup & Configurações</button>
+            </div>
+            
+            <!-- Dashboard Body -->
+            <div class="modal-body" style="padding: 30px;">
+                
+                <!-- Tab 1: Products List -->
+                <div class="admin-tab-content active" id="admin-tab-list">
+                    <!-- Campo de Busca de Produtos -->
+                    <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center; max-width: 450px;">
+                        <div style="position: relative; flex-grow: 1;">
+                            <input type="text" id="admin-search-input" placeholder="Pesquisar produto pelo nome ou referência..." style="width: 100%; padding: 10px 16px 10px 40px; border: 1px solid var(--border-color); border-radius: 50px; background-color: white; font-size: 0.85rem;">
+                            <svg viewBox="0 0 24 24" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; fill: var(--text-muted);">
+                                <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <div style="overflow-x: auto;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Foto</th>
+                                    <th>Nome</th>
+                                    <th>Categoria</th>
+                                    <th>Preço</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-products-table-body">
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Tab 2: Add/Edit Product Form -->
+                <div class="admin-tab-content" id="admin-tab-form">
+                    <form id="admin-product-form">
+                        <input type="hidden" id="admin-product-id" value="">
+                        <div class="form-grid">
+                            <div class="form-group form-full-width">
+                                <label for="admin-name">Nome do Produto *</label>
+                                <input type="text" id="admin-name" required placeholder="Ex: CONJUNTO RENDADO HARMONIA">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="admin-category">Categoria *</label>
+                                <select id="admin-category" required>
+                                    <option value="linha-noite">Linha Noite</option>
+                                    <option value="tangas">Calcinhas</option>
+                                    <option value="soutiens">Sutiãs</option>
+                                    <option value="conjuntos">Conjuntos</option>
+                                    <option value="calcas">Calças</option>
+                                    <option value="masculino">Masculino</option>
+                                    <option value="plus-size">Plus Size</option>
+                                    <option value="infantil">Infantil</option>
+                                    <option value="meias">Meias</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="admin-price">Preço (R$) *</label>
+                                <input type="number" id="admin-price" step="0.01" min="0" required placeholder="Ex: 29.90">
+                            </div>
+                            
+                            <div class="form-group form-full-width">
+                                <div class="admin-image-gallery-manager">
+                                    <label style="font-weight: 700; color: var(--primary-dark); display: block; margin-bottom: 8px;">Galeria de Imagens do Produto *</label>
+                                    <div class="gallery-upload-actions" style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                                        <button type="button" class="btn-keep-shopping" onclick="document.getElementById('admin-image-file').click()" style="background-color: var(--primary-color); color: #ffffff; width: auto; font-size: 0.85rem; padding: 8px 16px; margin: 0; display: flex; align-items: center; gap: 6px;">
+                                            <svg viewBox="0 0 24 24" style="width:16px; height:16px; fill:currentColor;"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+                                            Subir Imagens Locais
+                                        </button>
+                                        <div style="display: flex; flex-grow: 1; gap: 8px; min-width: 220px;">
+                                            <input type="url" id="admin-image-url-add" placeholder="Ou cole link da imagem da web e clique no +" style="flex-grow: 1; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 50px;">
+                                            <button type="button" onclick="addImageUrlFromInput()" class="btn-keep-shopping" style="background-color: var(--accent-color); color: white; width: 40px; min-width: auto; padding: 0; margin: 0; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border-radius: 50%;">+</button>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="admin-image-file" accept="image/*" multiple style="display: none;" onchange="handleImageUpload(event)">
+                                    <div class="image-previews-grid" id="image-previews-container">
+                                        <!-- Preenchido via JS -->
+                                    </div>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; display: block;">Mude a posição usando os botões. A primeira imagem será a principal exibida no catálogo. Mínimo de 1 imagem, máximo de 5.</span>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group form-full-width" style="margin-bottom: 15px;">
+                                <label style="font-weight: 700; color: var(--primary-dark); display: block; margin-bottom: 8px;">Tamanhos Disponíveis</label>
+                                <div style="display: flex; gap: 20px; flex-wrap: wrap; background-color: #fdfdfd; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm);">
+                                    <label style="display: flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; color: var(--primary-dark); font-size: 0.85rem;">
+                                        <input type="checkbox" class="admin-size-checkbox" value="P" checked style="width: 16px; height: 16px; cursor: pointer;">
+                                        P
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; color: var(--primary-dark); font-size: 0.85rem;">
+                                        <input type="checkbox" class="admin-size-checkbox" value="M" checked style="width: 16px; height: 16px; cursor: pointer;">
+                                        M
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; color: var(--primary-dark); font-size: 0.85rem;">
+                                        <input type="checkbox" class="admin-size-checkbox" value="G" checked style="width: 16px; height: 16px; cursor: pointer;">
+                                        G
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; color: var(--primary-dark); font-size: 0.85rem;">
+                                        <input type="checkbox" class="admin-size-checkbox" value="GG" checked style="width: 16px; height: 16px; cursor: pointer;">
+                                        GG
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; color: var(--primary-dark); font-size: 0.85rem;">
+                                        <input type="checkbox" class="admin-size-checkbox" value="EG" style="width: 16px; height: 16px; cursor: pointer;">
+                                        EG
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 6px; font-weight: 600; cursor: pointer; color: var(--primary-dark); font-size: 0.85rem;">
+                                        <input type="checkbox" class="admin-size-checkbox" value="EGG" style="width: 16px; height: 16px; cursor: pointer;">
+                                        EGG
+                                    </label>
+                                </div>
+                                <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 4px;">
+                                    <label for="admin-custom-sizes" style="font-weight: 600; color: var(--text-muted); font-size: 0.8rem;">Outros Tamanhos (ex: Meias ou Infantil, separados por vírgula):</label>
+                                    <input type="text" id="admin-custom-sizes" placeholder="Ex: 34-38, 39-43 ou 10, 12, 14" style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; background: white; font-size: 0.85rem;">
+                                </div>
+                            </div>
+                            
+                            <div class="form-group form-full-width" style="display: flex; gap: 30px; margin-top: 5px; margin-bottom: 15px; flex-wrap: wrap;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; color: var(--primary-dark); font-size: 0.9rem;">
+                                    <input type="checkbox" id="admin-highlight" style="width: 18px; height: 18px; cursor: pointer;">
+                                    Colocar produto em destaque (aparece na página inicial)
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; color: var(--primary-dark); font-size: 0.9rem;">
+                                    <input type="checkbox" id="admin-active" checked style="width: 18px; height: 18px; cursor: pointer;">
+                                    Produto Ativo (desmarque para ocultar do site)
+                                </label>
+                            </div>
+                            
+                            <div class="form-group form-full-width">
+                                <label for="admin-description">Descrição Completa</label>
+                                <textarea id="admin-description" rows="3" placeholder="Detalhes de tecido, tamanho, caimento..."></textarea>
+                            </div>
+                        </div>
+                        <div class="admin-form-actions">
+                            <button type="button" class="btn-keep-shopping" onclick="resetAdminForm(); switchAdminTab('list');" style="width: auto; padding: 10px 24px;">Cancelar</button>
+                            <button type="submit" class="btn-checkout-link" id="admin-form-submit-btn" style="width: auto; padding: 10px 32px; margin-bottom: 0;">Salvar Produto</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Tab 3: Users & Permissions -->
+                <div class="admin-tab-content" id="admin-tab-users">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <h3 style="color: var(--primary-dark); font-size: 1.15rem; font-weight: 700; margin-bottom: 4px;">Gerenciamento de Acessos</h3>
+                            <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0;">Lista de e-mails autorizados do Google ou contas locais de login.</p>
+                        </div>
+                        <button type="button" class="btn-keep-shopping" onclick="openAddUserModal()" style="width: auto; padding: 8px 16px; margin: 0; background-color: var(--primary-color); color: #ffffff; display: flex; align-items: center; gap: 6px; border: none; font-size: 0.8rem;">
+                            <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                            Adicionar Usuário
+                        </button>
+                    </div>
+                    
+                    <div style="overflow-x: auto;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>E-mail / Usuário</th>
+                                    <th>Tipo de Acesso</th>
+                                    <th>Cargo / Permissão</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-table-body">
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Tab: Banners Management -->
+                <div class="admin-tab-content" id="admin-tab-banners">
+                    <div style="background-color: #fcf0f0; border-left: 4px solid var(--accent-color); padding: 15px; border-radius: var(--border-radius-sm); margin-bottom: 25px; font-size: 0.9rem; line-height: 1.5; color: var(--primary-dark);">
+                        <strong>⚠️ MEDIDA DO BANNER:</strong> Para que o banner se ajuste perfeitamente e cubra toda a largura da tela sem distorções, a imagem deve possuir a dimensão ideal de <strong>1920 x 600 pixels</strong> (proporção retangular de paisagem 16:5 ou 3:1).
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                        <div>
+                            <h3 style="color: var(--primary-dark); font-size: 1.15rem; font-weight: 700; margin-bottom: 4px;">Banners Cadastrados</h3>
+                            <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0;">Você pode ter no máximo 4 banners ativos na página inicial.</p>
+                        </div>
+                        <span id="admin-banners-count-badge" style="background-color: var(--bg-secondary); color: var(--primary-dark); padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;">Banners: 0 / 4</span>
+                    </div>
+
+                    <!-- Lista de Banners Cadastrados -->
+                    <div style="overflow-x: auto; margin-bottom: 35px;">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Miniatura</th>
+                                    <th>Título</th>
+                                    <th>Texto de Apoio</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-banners-table-body">
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Formulário de Cadastro de Banner -->
+                    <div id="admin-banner-form-container" style="background-color: var(--bg-off-white); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); padding: 25px;">
+                        <h4 style="color: var(--primary-dark); margin-bottom: 20px; font-weight: 700;">Cadastrar Novo Banner</h4>
+                        <form id="admin-banner-form">
+                            <div class="form-grid">
+                                <div class="form-group form-full-width">
+                                    <label style="font-weight: 700; color: var(--primary-dark); display: block; margin-bottom: 8px;">Imagem do Banner *</label>
+                                    <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                                        <button type="button" class="btn-keep-shopping" onclick="document.getElementById('admin-banner-file').click()" style="background-color: var(--primary-color); color: #ffffff; width: auto; font-size: 0.85rem; padding: 8px 16px; margin: 0; display: flex; align-items: center; gap: 6px;">
+                                            <svg viewBox="0 0 24 24" style="width:16px; height:16px; fill:currentColor;"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+                                            Upload de Imagem
+                                        </button>
+                                        <div style="display: flex; flex-grow: 1; gap: 8px; min-width: 220px;">
+                                            <input type="url" id="admin-banner-url-add" placeholder="Ou cole o link da imagem da internet aqui..." style="flex-grow: 1; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 50px; background: white;">
+                                            <button type="button" id="btn-banner-url-add" class="btn-keep-shopping" style="background-color: var(--accent-color); color: white; width: 40px; min-width: auto; padding: 0; margin: 0; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; border-radius: 50%;">+</button>
+                                        </div>
+                                    </div>
+                                    <input type="file" id="admin-banner-file" accept="image/*" style="display: none;">
+                                    
+                                    <!-- Preview da Imagem Selecionada -->
+                                    <div id="banner-image-preview-box" style="display: none; position: relative; margin-top: 10px; border: 1px solid var(--border-color); border-radius: var(--border-radius-sm); overflow: hidden; max-height: 150px; background: white;">
+                                        <img id="banner-image-preview-img" src="" alt="Preview" style="width: 100%; height: 150px; object-fit: cover;">
+                                        <button type="button" id="btn-remove-banner-preview" style="position: absolute; top: 10px; right: 10px; background: rgba(220, 53, 69, 0.9); border: none; border-radius: 50%; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; font-weight: bold; font-size: 1rem;">×</button>
+                                    </div>
+                                </div>
+
+                                <div class="form-group form-full-width">
+                                    <label for="admin-banner-title">Título do Banner (Aparece em destaque)</label>
+                                    <input type="text" id="admin-banner-title" placeholder="Ex: Coleção Outono/Inverno">
+                                </div>
+
+                                <div class="form-group form-full-width">
+                                    <label for="admin-banner-text">Texto de Apoio (Descrição menor sob o título)</label>
+                                    <textarea id="admin-banner-text" rows="2" placeholder="Ex: Peças com renda e cores quentes para combinar com a estação."></textarea>
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                                <button type="submit" id="admin-banner-submit-btn" class="btn-checkout-link" style="width: auto; padding: 10px 32px; margin-bottom: 0;">Salvar Banner</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div id="admin-banner-limit-msg" style="display: none; background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 15px; border-radius: var(--border-radius-sm); font-size: 0.9rem; text-align: center; font-weight: 600; margin-top: 20px;">
+                        ⚠️ Limite máximo de 4 banners cadastrados atingido. Exclua um banner da lista acima para habilitar o cadastro de novos.
+                    </div>
+                </div>
+                
+                <!-- Tab 4: Backup & Configs -->
+                <div class="admin-tab-content" id="admin-tab-backup">
+                    <div class="admin-backup-area">
+                        <div class="backup-card">
+                            <h4>Exportar Catálogo</h4>
+                            <p>Baixe todas as alterações de produtos cadastradas em seu computador em formato JSON para fins de backup.</p>
+                            <button type="button" class="btn-keep-shopping" onclick="exportProductsBackup()" style="margin-top: 15px; background-color: var(--primary-color); color: #ffffff;">Exportar Backup (JSON)</button>
+                        </div>
+                        
+                        <div class="backup-card">
+                            <h4>Importar Catálogo</h4>
+                            <p>Carregue um arquivo JSON de catálogo gerado anteriormente por este painel para restaurar as informações.</p>
+                            <input type="file" id="backup-file-input" accept=".json" style="display: none;" onchange="importProductsBackup(event)">
+                            <button type="button" class="btn-keep-shopping" onclick="document.getElementById('backup-file-input').click()" style="margin-top: 15px; background-color: var(--accent-color); color: #ffffff;">Carregar Backup (JSON)</button>
+                        </div>
+                        
+                        <div class="backup-card">
+                            <h4>Alterar Senha do Painel</h4>
+                            <p>Modifique a senha de acesso administrativo. A senha padrão de fábrica é <code>nana</code>.</p>
+                            <form id="change-password-form" style="margin-top: 15px;">
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="pwd-current" style="font-size: 0.75rem; font-weight: 600;">Senha Atual</label>
+                                    <input type="password" id="pwd-current" required style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; background: white;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 10px;">
+                                    <label for="pwd-new" style="font-size: 0.75rem; font-weight: 600;">Nova Senha</label>
+                                    <input type="password" id="pwd-new" required style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; background: white;">
+                                </div>
+                                <div class="form-group" style="margin-bottom: 15px;">
+                                    <label for="pwd-confirm" style="font-size: 0.75rem; font-weight: 600;">Confirmar Nova Senha</label>
+                                    <input type="password" id="pwd-confirm" required style="width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; background: white;">
+                                </div>
+                                <button type="submit" class="btn-keep-shopping" style="background-color: var(--primary-color); color: #ffffff; width: auto; font-size: 0.8rem; padding: 8px 16px; margin: 0;">Salvar Nova Senha</button>
+                            </form>
+                        </div>
+                        
+                        <div class="backup-card reset-card">
+                            <h4>Restaurar Catálogo de Fábrica</h4>
+                            <p>Esta ação apagará todas as peças cadastradas por você e redefinirá o catálogo com as 22 peças padrão originais de fábrica.</p>
+                            <button type="button" class="btn-submit-order" onclick="resetToFactorySettings()" style="margin-top: 15px; background-color: #dc3545; color: #ffffff;">Restaurar Padrão de Fábrica</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+ 
+    <!-- --- Modal Adicionar Usuário --- -->
+    <div class="admin-modal-user" id="admin-user-modal" onclick="if(event.target === this) closeAddUserModal();">
+        <div class="modal-container" style="max-width: 440px;">
+            <div class="modal-header">
+                <h2>Adicionar Novo Acesso</h2>
+                <button class="btn-close-modal" onclick="closeAddUserModal()" aria-label="Fechar modal de usuário">
+                    <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="admin-user-form">
+                    <div class="form-group">
+                        <label for="user-name">Nome Completo *</label>
+                        <input type="text" id="user-name" required placeholder="Ex: Ana Souza">
+                    </div>
+                    <div class="form-group">
+                        <label for="user-type">Tipo de Acesso *</label>
+                        <select id="user-type" required onchange="toggleUserFormFields(this.value)">
+                            <option value="google" selected>Conta Google (OAuth)</option>
+                            <option value="credentials">Usuário e Senha Locais</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label id="user-identifier-label" for="user-identifier">E-mail do Google *</label>
+                        <input type="text" id="user-identifier" required placeholder="Ex: anasouza@gmail.com">
+                    </div>
+                    <div class="form-group" id="user-password-group" style="display: none;">
+                        <label for="user-password">Senha Provisória *</label>
+                        <input type="password" id="user-password" placeholder="Mínimo 4 caracteres">
+                    </div>
+                    <div class="form-group">
+                        <label for="user-role">Nível de Permissão *</label>
+                        <select id="user-role" required>
+                            <option value="collaborator" selected>Colaborador (Apenas Catálogo)</option>
+                            <option value="admin">Administrador (Total + Usuários)</option>
+                        </select>
+                    </div>
+                    <div class="admin-form-actions" style="margin-top: 20px; padding-top: 15px;">
+                        <button type="button" class="btn-keep-shopping" onclick="closeAddUserModal()" style="width: auto; padding: 8px 16px; margin: 0;">Cancelar</button>
+                        <button type="submit" class="btn-checkout-link" style="width: auto; padding: 8px 24px; margin-bottom: 0;">Salvar Acesso</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+ 
+    <!-- --- JS Script Link --- -->
+    <script src="admin.js?v=2.3"></script>
+</body>
+</html>
