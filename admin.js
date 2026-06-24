@@ -265,23 +265,7 @@ const FACTORY_PRODUCTS_DATA = [
         "highlight": false,
         "active": true
     },
-    {
-        "id": 17,
-        "name": "Ref. 8003 - Body Anita",
-        "slug": "ref-8003-body-anita-2494",
-        "price": 19.9,
-        "category": "conjuntos",
-        "categoryName": "Conjuntos",
-        "imageUrl": "imagens-produtos-nana-4x5-cortadas/8003-body-anita-ref-8003-body-anita-2494-01-4x5.jpg",
-        "images": [
-            "imagens-produtos-nana-4x5-cortadas/8003-body-anita-ref-8003-body-anita-2494-01-4x5.jpg",
-            "imagens-produtos-nana-4x5-cortadas/8003-body-anita-ref-8003-body-anita-2494-02-4x5.jpg",
-            "imagens-produtos-nana-4x5-cortadas/8003-body-anita-ref-8003-body-anita-2494-03-4x5.jpg"
-        ],
-        "description": "O conjunto Body Anita (Ref. 8003) reúne sofisticação, delicadeza e conforto em uma única proposta. Traz peças coordenadas com acabamento em renda macia ou detalhes sofisticados que se ajustam harmoniosamente às curvas do corpo. Perfeito para momentos especiais ou para se sentir autoconfiante e elegante no dia a dia. Disponível nos tamanhos: M/G/GG.",
-        "highlight": false,
-        "active": true
-    },
+
     {
         "id": 18,
         "name": "TANGA ÍSIS",
@@ -1693,23 +1677,7 @@ const FACTORY_PRODUCTS_DATA = [
         "highlight": false,
         "active": true
     },
-    {
-        "id": 106,
-        "name": "CROPPED BLOGUEIRINHA",
-        "slug": "cropped-blogueirinha",
-        "price": 25.99,
-        "category": "conjuntos",
-        "categoryName": "Conjuntos",
-        "imageUrl": "imagens-produtos-nana-4x5-cortadas/sem-ref-cropped-blogueirinha-cropped-blogueirinha-01-4x5.jpg",
-        "images": [
-            "imagens-produtos-nana-4x5-cortadas/sem-ref-cropped-blogueirinha-cropped-blogueirinha-01-4x5.jpg",
-            "imagens-produtos-nana-4x5-cortadas/sem-ref-cropped-blogueirinha-cropped-blogueirinha-02-4x5.jpg",
-            "imagens-produtos-nana-4x5-cortadas/sem-ref-cropped-blogueirinha-cropped-blogueirinha-03-4x5.jpg"
-        ],
-        "description": "O conjunto CROPPED BLOGUEIRINHA reúne sofisticação, delicadeza e conforto em uma única proposta. Traz peças coordenadas com acabamento em renda macia ou detalhes sofisticados que se ajustam harmoniosamente às curvas do corpo. Perfeito para momentos especiais ou para se sentir autoconfiante e elegante no dia a dia. Disponível nos tamanhos: P/M/G/GG.",
-        "highlight": true,
-        "active": true
-    },
+
     {
         "id": 107,
         "name": "TANGA ALGODÃO PALA",
@@ -2955,6 +2923,8 @@ const FACTORY_PRODUCTS_DATA = [
 
 // --- Configurações de Estado Admin ---
 let products = [];
+let adminSortColumn = 'name'; 
+let adminSortDirection = 'asc';
 let users = [];
 let currentUser = null;
 let tempImages = []; 
@@ -3487,10 +3457,99 @@ function deleteUser(userId) {
     renderAdminUsersTable();
 }
 
+// --- Formatar Nome do Produto ---
+function formatProductName(name) {
+    if (!name || typeof name !== 'string') return name;
+    name = name.trim();
+
+    let refNum = null;
+    let cleanName = name;
+
+    // 1. Procurar por referências como "ref. 1234", "ref 1234", "r 1234" em qualquer parte do nome
+    const refRegex = /\b(?:ref|r)[\s.:#]*(\d+)\b/i;
+    const match = name.match(refRegex);
+
+    if (match) {
+        refNum = match[1];
+        const refIndex = match.index;
+        const refLength = match[0].length;
+        
+        let before = name.substring(0, refIndex);
+        let after = name.substring(refIndex + refLength);
+
+        // Limpar hifens, espaços ou pontuações adjacentes
+        before = before.replace(/\s*[-\s:#/]+\s*$/, ' ').trim();
+        after = after.replace(/^\s*[-\s:#/]+\s*/, ' ').trim();
+
+        cleanName = (before + ' ' + after).trim();
+    } else {
+        // 2. Caso não tenha palavra "ref", busca número de 3 ou 4 dígitos no início ou no fim do nome
+        const numRegexStart = /^\b(\d{3,4})\b/;
+        const numRegexEnd = /\b(\d{3,4})\b$/;
+
+        let numMatch = name.match(numRegexStart);
+        if (numMatch) {
+            refNum = numMatch[1];
+            cleanName = name.replace(numRegexStart, '').trim();
+        } else {
+            numMatch = name.match(numRegexEnd);
+            if (numMatch) {
+                refNum = numMatch[1];
+                cleanName = name.replace(numRegexEnd, '').trim();
+            }
+        }
+
+        // Limpar separadores no início ou fim
+        cleanName = cleanName.replace(/^[-\s:#/]+/, '').replace(/[-\s:#/]+$/, '').trim();
+    }
+
+    // Capitalizar a primeira letra de todas as palavras
+    let formattedRest = '';
+    if (cleanName) {
+        formattedRest = cleanName.toLowerCase().replace(/(?:^|[^a-zÀ-ÿ0-9])([a-zÀ-ÿ0-9])/gi, function(match) {
+            return match.toUpperCase();
+        });
+    }
+
+    if (refNum) {
+        return `Ref. ${refNum}${formattedRest ? ' - ' + formattedRest : ''}`;
+    } else {
+        return formattedRest;
+    }
+}
+
+// --- Ordenação da Tabela de Produtos ---
+function toggleAdminSort(column) {
+    if (adminSortColumn === column) {
+        adminSortDirection = adminSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        adminSortColumn = column;
+        adminSortDirection = 'asc';
+    }
+    renderAdminProductsTable();
+}
+window.toggleAdminSort = toggleAdminSort;
+
+function updateSortIcons() {
+    const columns = ['name', 'category', 'price'];
+    columns.forEach(col => {
+        const el = document.getElementById(`sort-icon-${col}`);
+        if (el) {
+            if (adminSortColumn === col) {
+                el.innerHTML = adminSortDirection === 'asc' ? '▲' : '▼';
+                el.style.color = 'var(--primary-color)';
+            } else {
+                el.innerHTML = '↕';
+                el.style.color = '#ccc';
+            }
+        }
+    });
+}
+
 // --- Carregar Produtos do LocalStorage ---
 function loadProducts() {
     try {
-        const storedProducts = localStorage.getItem('nana_products_v6');
+        const storedProducts = localStorage.getItem('nana_products_v9');
         if (storedProducts) {
             products = JSON.parse(storedProducts);
             let updated = false;
@@ -3521,9 +3580,16 @@ function loadProducts() {
                     p.sizes = parseSizesFromDescription(p.description) || ['P', 'M', 'G', 'GG'];
                     updated = true;
                 }
+
+                // Formatar nome do produto para manter o padrão desejado
+                const formattedName = formatProductName(p.name);
+                if (p.name !== formattedName) {
+                    p.name = formattedName;
+                    updated = true;
+                }
             });
             if (updated) {
-                localStorage.setItem('nana_products_v6', JSON.stringify(products));
+                localStorage.setItem('nana_products_v9', JSON.stringify(products));
             }
         } else {
             products = FACTORY_PRODUCTS_DATA.map(p => {
@@ -3536,9 +3602,13 @@ function loadProducts() {
                 if (copy.sizes === undefined || copy.sizes === null) {
                     copy.sizes = parseSizesFromDescription(copy.description) || ['P', 'M', 'G', 'GG'];
                 }
+                if (copy.category === 'infantil' && (!copy.sizes.includes('PP') && !copy.sizes.includes('pp'))) {
+                    copy.sizes.unshift('PP');
+                }
+                copy.name = formatProductName(copy.name);
                 return copy;
             });
-            localStorage.setItem('nana_products_v6', JSON.stringify(products));
+            localStorage.setItem('nana_products_v9', JSON.stringify(products));
         }
     } catch (e) {
         console.error("Erro ao ler produtos:", e);
@@ -3552,6 +3622,10 @@ function loadProducts() {
             if (copy.sizes === undefined || copy.sizes === null) {
                 copy.sizes = parseSizesFromDescription(copy.description) || ['P', 'M', 'G', 'GG'];
             }
+            if (copy.category === 'infantil' && (!copy.sizes.includes('PP') && !copy.sizes.includes('pp'))) {
+                copy.sizes.unshift('PP');
+            }
+            copy.name = formatProductName(copy.name);
             return copy;
         });
     }
@@ -3561,15 +3635,36 @@ function loadProducts() {
 function renderAdminProductsTable() {
     if (!DOMAdmin.productsTableBody) return;
     
-    let filtered = products;
+    let filtered = [...products];
     const searchVal = DOMAdmin.adminSearchInput ? DOMAdmin.adminSearchInput.value.trim().toLowerCase() : '';
     
     if (searchVal) {
         const cleanQuery = searchVal.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        filtered = products.filter(prod => {
+        filtered = filtered.filter(prod => {
             const cleanName = (prod.name || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             const cleanDesc = (prod.description || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             return cleanName.includes(cleanQuery) || cleanDesc.includes(cleanQuery);
+        });
+    }
+
+    // Lógica de Ordenação
+    if (adminSortColumn) {
+        filtered.sort((a, b) => {
+            let valA, valB;
+            if (adminSortColumn === 'name') {
+                valA = (a.name || '').toLowerCase();
+                valB = (b.name || '').toLowerCase();
+                return adminSortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            } else if (adminSortColumn === 'category') {
+                valA = (a.categoryName || '').toLowerCase();
+                valB = (b.categoryName || '').toLowerCase();
+                return adminSortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            } else if (adminSortColumn === 'price') {
+                valA = Number(a.price) || 0;
+                valB = Number(b.price) || 0;
+                return adminSortDirection === 'asc' ? valA - valB : valB - valA;
+            }
+            return 0;
         });
     }
     
@@ -3581,6 +3676,7 @@ function renderAdminProductsTable() {
                 </td>
             </tr>
         `;
+        updateSortIcons();
         return;
     }
     
@@ -3600,6 +3696,8 @@ function renderAdminProductsTable() {
             </td>
         </tr>
     `).join('');
+
+    updateSortIcons();
 }
 
 // --- Iniciar Edição de Produto ---
@@ -3618,7 +3716,7 @@ function startEditProduct(productId) {
     if (DOMAdmin.activeCheckbox) DOMAdmin.activeCheckbox.checked = prod.active !== false;
     
     // Populate Sizes
-    const standardList = ['P', 'M', 'G', 'GG', 'EG', 'EGG'];
+    const standardList = ['PP', 'P', 'M', 'G', 'GG', 'EG', 'EGG', 'Único'];
     const prodSizes = prod.sizes || ['P', 'M', 'G', 'GG'];
     DOMAdmin.sizeCheckboxes.forEach(cb => {
         cb.checked = prodSizes.includes(cb.value);
@@ -3683,7 +3781,7 @@ function deleteProduct(productId) {
     if (!confirm("Tem certeza que deseja excluir este produto do catálogo?")) return;
     
     products = products.filter(p => p.id !== productId);
-    localStorage.setItem('nana_products_v6', JSON.stringify(products));
+    localStorage.setItem('nana_products_v9', JSON.stringify(products));
     
     renderAdminProductsTable();
 }
@@ -4033,7 +4131,7 @@ function importProductsBackup(event) {
                     }
                     
                     products = processedProducts;
-                    localStorage.setItem('nana_products_v6', JSON.stringify(products));
+                    localStorage.setItem('nana_products_v9', JSON.stringify(products));
                     renderAdminProductsTable();
                     alert("Catálogo importado com sucesso!");
                 }
@@ -4060,9 +4158,12 @@ function resetToFactorySettings() {
             if (copy.sizes === undefined || copy.sizes === null) {
                 copy.sizes = parseSizesFromDescription(copy.description) || ['P', 'M', 'G', 'GG'];
             }
+            if (copy.category === 'infantil' && (!copy.sizes.includes('PP') && !copy.sizes.includes('pp'))) {
+                copy.sizes.unshift('PP');
+            }
             return copy;
         });
-        localStorage.setItem('nana_products_v6', JSON.stringify(products));
+        localStorage.setItem('nana_products_v9', JSON.stringify(products));
         renderAdminProductsTable();
         alert("Configurações de fábrica restauradas com sucesso!");
     }
@@ -4150,7 +4251,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (idx !== -1) {
                     products[idx] = {
                         ...products[idx],
-                        name: nameVal,
+                        name: formatProductName(nameVal),
                         category: categoryVal,
                         categoryName: categoryNameVal,
                         price: priceVal,
@@ -4168,7 +4269,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const newSlug = nameVal.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
                 products.push({
                     id: newId,
-                    name: nameVal,
+                    name: formatProductName(nameVal),
                     slug: newSlug,
                     price: priceVal,
                     category: categoryVal,
@@ -4182,7 +4283,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
             
-            localStorage.setItem('nana_products_v6', JSON.stringify(products));
+            localStorage.setItem('nana_products_v9', JSON.stringify(products));
             resetAdminForm();
             switchAdminTab('list');
             alert("Produto salvo com sucesso!");

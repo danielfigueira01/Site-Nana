@@ -265,23 +265,7 @@ const PRODUCTS_DATA = [
         "highlight": false,
         "active": true
     },
-    {
-        "id": 17,
-        "name": "Ref. 8003 - Body Anita",
-        "slug": "ref-8003-body-anita-2494",
-        "price": 19.9,
-        "category": "conjuntos",
-        "categoryName": "Conjuntos",
-        "imageUrl": "imagens-produtos-nana-4x5-cortadas/8003-body-anita-ref-8003-body-anita-2494-01-4x5.jpg",
-        "images": [
-            "imagens-produtos-nana-4x5-cortadas/8003-body-anita-ref-8003-body-anita-2494-01-4x5.jpg",
-            "imagens-produtos-nana-4x5-cortadas/8003-body-anita-ref-8003-body-anita-2494-02-4x5.jpg",
-            "imagens-produtos-nana-4x5-cortadas/8003-body-anita-ref-8003-body-anita-2494-03-4x5.jpg"
-        ],
-        "description": "O conjunto Body Anita (Ref. 8003) reúne sofisticação, delicadeza e conforto em uma única proposta. Traz peças coordenadas com acabamento em renda macia ou detalhes sofisticados que se ajustam harmoniosamente às curvas do corpo. Perfeito para momentos especiais ou para se sentir autoconfiante e elegante no dia a dia. Disponível nos tamanhos: M/G/GG.",
-        "highlight": false,
-        "active": true
-    },
+
     {
         "id": 18,
         "name": "TANGA ÍSIS",
@@ -1693,23 +1677,7 @@ const PRODUCTS_DATA = [
         "highlight": false,
         "active": true
     },
-    {
-        "id": 106,
-        "name": "CROPPED BLOGUEIRINHA",
-        "slug": "cropped-blogueirinha",
-        "price": 25.99,
-        "category": "conjuntos",
-        "categoryName": "Conjuntos",
-        "imageUrl": "imagens-produtos-nana-4x5-cortadas/sem-ref-cropped-blogueirinha-cropped-blogueirinha-01-4x5.jpg",
-        "images": [
-            "imagens-produtos-nana-4x5-cortadas/sem-ref-cropped-blogueirinha-cropped-blogueirinha-01-4x5.jpg",
-            "imagens-produtos-nana-4x5-cortadas/sem-ref-cropped-blogueirinha-cropped-blogueirinha-02-4x5.jpg",
-            "imagens-produtos-nana-4x5-cortadas/sem-ref-cropped-blogueirinha-cropped-blogueirinha-03-4x5.jpg"
-        ],
-        "description": "O conjunto CROPPED BLOGUEIRINHA reúne sofisticação, delicadeza e conforto em uma única proposta. Traz peças coordenadas com acabamento em renda macia ou detalhes sofisticados que se ajustam harmoniosamente às curvas do corpo. Perfeito para momentos especiais ou para se sentir autoconfiante e elegante no dia a dia. Disponível nos tamanhos: P/M/G/GG.",
-        "highlight": true,
-        "active": true
-    },
+
     {
         "id": 107,
         "name": "TANGA ALGODÃO PALA",
@@ -3170,13 +3138,74 @@ function parseSizesFromDescription(description) {
     return list.length > 0 ? list : null;
 }
 
+// --- Formatar Nome do Produto ---
+function formatProductName(name) {
+    if (!name || typeof name !== 'string') return name;
+    name = name.trim();
+
+    let refNum = null;
+    let cleanName = name;
+
+    // 1. Procurar por referências como "ref. 1234", "ref 1234", "r 1234" em qualquer parte do nome
+    const refRegex = /\b(?:ref|r)[\s.:#]*(\d+)\b/i;
+    const match = name.match(refRegex);
+
+    if (match) {
+        refNum = match[1];
+        const refIndex = match.index;
+        const refLength = match[0].length;
+        
+        let before = name.substring(0, refIndex);
+        let after = name.substring(refIndex + refLength);
+
+        // Limpar hifens, espaços ou pontuações adjacentes
+        before = before.replace(/\s*[-\s:#/]+\s*$/, ' ').trim();
+        after = after.replace(/^\s*[-\s:#/]+\s*/, ' ').trim();
+
+        cleanName = (before + ' ' + after).trim();
+    } else {
+        // 2. Caso não tenha palavra "ref", busca número de 3 ou 4 dígitos no início ou no fim do nome
+        const numRegexStart = /^\b(\d{3,4})\b/;
+        const numRegexEnd = /\b(\d{3,4})\b$/;
+
+        let numMatch = name.match(numRegexStart);
+        if (numMatch) {
+            refNum = numMatch[1];
+            cleanName = name.replace(numRegexStart, '').trim();
+        } else {
+            numMatch = name.match(numRegexEnd);
+            if (numMatch) {
+                refNum = numMatch[1];
+                cleanName = name.replace(numRegexEnd, '').trim();
+            }
+        }
+
+        // Limpar separadores no início ou fim
+        cleanName = cleanName.replace(/^[-\s:#/]+/, '').replace(/[-\s:#/]+$/, '').trim();
+    }
+
+    // Capitalizar a primeira letra de todas as palavras
+    let formattedRest = '';
+    if (cleanName) {
+        formattedRest = cleanName.toLowerCase().replace(/(?:^|[^a-zÀ-ÿ0-9])([a-zÀ-ÿ0-9])/gi, function(match) {
+            return match.toUpperCase();
+        });
+    }
+
+    if (refNum) {
+        return `Ref. ${refNum}${formattedRest ? ' - ' + formattedRest : ''}`;
+    } else {
+        return formattedRest;
+    }
+}
+
 // --- Carregar e Salvar Produtos no LocalStorage ---
 function loadProducts() {
     try {
-        const storedProducts = localStorage.getItem('nana_products_v6');
+        const storedProducts = localStorage.getItem('nana_products_v9');
         if (storedProducts) {
             products = JSON.parse(storedProducts);
-            // Garantir lista de imagens e tamanhos
+            // Garantir lista de imagens, tamanhos e nomes formatados
             let updated = false;
             products.forEach(p => {
                 // Se o produto no localStorage tiver apenas imagens da fábrica e a quantidade for menor do que a da fábrica, restaura
@@ -3205,9 +3234,16 @@ function loadProducts() {
                     p.sizes = parseSizesFromDescription(p.description) || ['P', 'M', 'G', 'GG'];
                     updated = true;
                 }
+
+                // Formatar nome do produto para manter o padrão desejado
+                const formattedName = formatProductName(p.name);
+                if (p.name !== formattedName) {
+                    p.name = formattedName;
+                    updated = true;
+                }
             });
             if (updated) {
-                localStorage.setItem('nana_products_v6', JSON.stringify(products));
+                localStorage.setItem('nana_products_v9', JSON.stringify(products));
             }
         } else {
             products = PRODUCTS_DATA.map(p => {
@@ -3220,9 +3256,13 @@ function loadProducts() {
                 if (copy.sizes === undefined || copy.sizes === null) {
                     copy.sizes = parseSizesFromDescription(copy.description) || ['P', 'M', 'G', 'GG'];
                 }
+                if (copy.category === 'infantil' && (!copy.sizes.includes('PP') && !copy.sizes.includes('pp'))) {
+                    copy.sizes.unshift('PP');
+                }
+                copy.name = formatProductName(copy.name);
                 return copy;
             });
-            localStorage.setItem('nana_products_v6', JSON.stringify(products));
+            localStorage.setItem('nana_products_v9', JSON.stringify(products));
         }
     } catch (e) {
         console.error("Erro ao ler produtos do localStorage:", e);
@@ -3236,6 +3276,10 @@ function loadProducts() {
             if (copy.sizes === undefined || copy.sizes === null) {
                 copy.sizes = parseSizesFromDescription(copy.description) || ['P', 'M', 'G', 'GG'];
             }
+            if (copy.category === 'infantil' && (!copy.sizes.includes('PP') && !copy.sizes.includes('pp'))) {
+                copy.sizes.unshift('PP');
+            }
+            copy.name = formatProductName(copy.name);
             return copy;
         });
     }
@@ -3536,6 +3580,7 @@ function closeCartDrawer() {
 
 // --- Detalhes do Produto Modal (Revisto com estilo clean) ---
 function openProductModal(productId) {
+    loadProducts(); // Sincroniza com as alterações do painel gerencial
     const product = products.find(p => p.id === productId);
     if (!product) return;
     
@@ -3544,6 +3589,22 @@ function openProductModal(productId) {
     const availableSizes = product.sizes && Array.isArray(product.sizes) ? product.sizes : (parseSizesFromDescription(product.description) || ['P', 'M', 'G', 'GG']);
     selectedSize = availableSizes.length > 0 ? availableSizes[0] : null;
     const isOutOfStock = availableSizes.length === 0;
+    
+    // Formatar descrição para sempre refletir os tamanhos corretos do banco de dados/gerencial
+    let displayDesc = product.description || "Peça selecionada pela Nana Moda Íntima para quem busca conforto, qualidade e ótimo custo-benefício. Consulte disponibilidade de tamanhos e cores pelo WhatsApp.";
+    if (availableSizes.length > 0) {
+        const sizeRegex = /(?:Disponível nos tamanhos|Disponível no tamanho|tamanhos|tamanho):\s*([^.\r\n]+)/i;
+        if (sizeRegex.test(displayDesc)) {
+            const sizeString = availableSizes.join('/');
+            displayDesc = displayDesc.replace(sizeRegex, (match) => {
+                if (match.toLowerCase().includes('tamanhos')) {
+                    return `Disponível nos tamanhos: ${sizeString}`;
+                } else {
+                    return `Disponível no tamanho: ${sizeString}`;
+                }
+            });
+        }
+    }
     
     const modalContent = document.getElementById('product-detail-modal-body');
     if (!modalContent) return;
@@ -3571,7 +3632,7 @@ function openProductModal(productId) {
                 <div class="product-detail-price">${formatCurrency(product.price)}</div>
                 
                 <h4 class="product-detail-desc-title">Descrição</h4>
-                <p class="product-detail-desc">${product.description || "Peça selecionada pela Nana Moda Íntima para quem busca conforto, qualidade e ótimo custo-benefício. Consulte disponibilidade de tamanhos e cores pelo WhatsApp."}</p>
+                <p class="product-detail-desc">${displayDesc}</p>
                 
                 <div class="size-selector-label" style="${isOutOfStock ? 'color: #dc3545; font-weight: 700;' : ''}">${isOutOfStock ? '⚠️ Produto indisponível (Sem estoque)' : 'Selecione o Tamanho'}</div>
                 ${isOutOfStock ? '' : `
