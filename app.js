@@ -2928,6 +2928,30 @@ const BANNERS_DATA = [
         title: "Moda íntima com conforto, beleza e praticidade",
         text: "Escolha suas peças favoritas e finalize seu pedido pelo WhatsApp de forma simples, rápida e segura.",
         image: "banner01.png"
+    },
+    {
+        id: 2,
+        title: "Coleção Calcinhas",
+        text: "Conforto e elegância para o seu dia a dia.",
+        image: "banner_calcinhas.jpg"
+    },
+    {
+        id: 3,
+        title: "Sutiãs Premium",
+        text: "Sustentação, leveza e beleza em cada detalhe.",
+        image: "banner_soutiens.jpg"
+    },
+    {
+        id: 4,
+        title: "Cuecas Boxer & Premium",
+        text: "Estilo e o máximo de conforto para o dia a dia masculino.",
+        image: "banner_cuecas.jpg"
+    },
+    {
+        id: 5,
+        title: "Moda Plus Size",
+        text: "Modelagens perfeitas que valorizam as suas curvas com conforto.",
+        image: "banner_plus_size.jpg"
     }
 ];
 
@@ -2935,12 +2959,12 @@ let banners = [];
 
 function loadBanners() {
     try {
-        const stored = localStorage.getItem('nana_banners_v1');
+        const stored = localStorage.getItem('nana_banners_v2');
         if (stored) {
             banners = JSON.parse(stored);
         } else {
             banners = [...BANNERS_DATA];
-            localStorage.setItem('nana_banners_v1', JSON.stringify(banners));
+            localStorage.setItem('nana_banners_v2', JSON.stringify(banners));
         }
     } catch(e) {
         console.error("Erro ao carregar banners:", e);
