@@ -2936,7 +2936,7 @@ const BANNERS_DATA = [
         id: 1,
         title: "Nana Moda Íntima",
         text: "Conforto, beleza e elegância para todos os momentos. Escolha suas peças favoritas e finalize seu pedido pelo WhatsApp de forma simples, rápida e segura.",
-        image: "banner_generico.jpg"
+        image: "banner_generico.png"
     }
 ];
 let banners = [];
@@ -3895,12 +3895,12 @@ function moveTempImage(idx, direction) {
 // --- Lógica do Gerenciador de Banners ---
 function loadBanners() {
     try {
-        const stored = localStorage.getItem('nana_banners_v3');
+        const stored = localStorage.getItem('nana_banners_v4');
         if (stored) {
             banners = JSON.parse(stored);
         } else {
             banners = [...BANNERS_DATA];
-            localStorage.setItem('nana_banners_v3', JSON.stringify(banners));
+            localStorage.setItem('nana_banners_v4', JSON.stringify(banners));
         }
     } catch(e) {
         console.error("Erro ao carregar banners:", e);
@@ -4011,7 +4011,7 @@ function deleteBanner(bannerId) {
     }
     
     banners = banners.filter(b => b.id !== bannerId);
-    localStorage.setItem('nana_banners_v3', JSON.stringify(banners));
+    localStorage.setItem('nana_banners_v4', JSON.stringify(banners));
     renderAdminBanners();
 }
 
@@ -4044,7 +4044,7 @@ function handleBannerFormSubmit(event) {
         image: tempBannerImage
     });
     
-    localStorage.setItem('nana_banners_v3', JSON.stringify(banners));
+    localStorage.setItem('nana_banners_v4', JSON.stringify(banners));
     resetBannerForm();
     renderAdminBanners();
     alert("Banner adicionado com sucesso!");
