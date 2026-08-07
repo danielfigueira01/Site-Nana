@@ -1,5 +1,5 @@
 (function configureOnlineAdmin() {
-    const AUTHORIZED_ADMIN_EMAIL = 'varliane10@gmail.com';
+    const AUTHORIZED_ADMIN_EMAIL = 'danielfigueira01@gmail.com';
     const PRODUCT_BUCKET = 'product-images';
     let onlineCategories = new Map();
 

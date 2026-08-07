@@ -83,6 +83,8 @@ test('modais têm semântica e o painel online exige autenticação administrati
   assert.doesNotMatch(adminJs, /placeholder\.apps\.googleusercontent\.com/);
   assert.match(onlineAdmin, /signInWithPassword/);
   assert.match(onlineAdmin, /signUp/);
+  assert.match(onlineAdmin, /danielfigueira01@gmail\.com/);
+  assert.doesNotMatch(onlineAdmin, /varliane10@gmail\.com/);
   assert.match(onlineAdmin, /rpc\('is_catalog_admin'\)/);
   assert.match(onlineAdmin, /from\('products'\)/);
   assert.match(onlineAdmin, /\.from\(PRODUCT_BUCKET\)[\s\S]*?\.upload/);
