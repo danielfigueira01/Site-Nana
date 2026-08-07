@@ -4,7 +4,7 @@
 ========================================================================
 */
 
-// --- Banco de Dados Local dos Produtos (22 Itens Oficiais com Textos Elegantes) ---
+// --- Banco de Dados Local dos Produtos ---
 const PRODUCTS_DATA = [
     {
         "id": 1,
@@ -2927,7 +2927,7 @@ const BANNERS_DATA = [
         id: 1,
         title: "Nana Moda Íntima",
         text: "Conforto, beleza e elegância para todos os momentos. Escolha suas peças favoritas e finalize seu pedido pelo WhatsApp de forma simples, rápida e segura.",
-        image: "banner_generico.png"
+        image: "banner_generico.webp"
     }
 ];
 
@@ -2935,12 +2935,15 @@ let banners = [];
 
 function loadBanners() {
     try {
-        const stored = localStorage.getItem('nana_banners_v4');
+        const stored = localStorage.getItem('nana_banners_v5') || localStorage.getItem('nana_banners_v4');
         if (stored) {
             banners = JSON.parse(stored);
+            const isLegacyDefault = banners.length === 1 && banners[0]?.image === 'banner_generico.png';
+            if (isLegacyDefault) banners[0].image = 'banner_generico.webp';
+            localStorage.setItem('nana_banners_v5', JSON.stringify(banners));
         } else {
             banners = [...BANNERS_DATA];
-            localStorage.setItem('nana_banners_v4', JSON.stringify(banners));
+            localStorage.setItem('nana_banners_v5', JSON.stringify(banners));
         }
     } catch(e) {
         console.error("Erro ao carregar banners:", e);
@@ -2960,6 +2963,7 @@ let selectedSize = 'M';
 let currentProductInModal = null;
 let currentSlideIndex = 0;
 let slideInterval = null;
+let lastFocusedElement = null;
 
 // --- Seletores do DOM ---
 const DOM = {
@@ -3024,11 +3028,98 @@ const ImageStore = {
 
 const localImagesMap = {};
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function escapeAttribute(value) {
+    return escapeHtml(value);
+}
+
 function getProductImageSrc(url) {
-    if (url && url.startsWith('local-img-')) {
-        return localImagesMap[url] || 'logo.jpg';
+    let resolvedUrl = typeof url === 'string' ? url.trim() : '';
+
+    if (resolvedUrl.startsWith('local-img-')) {
+        resolvedUrl = localImagesMap[resolvedUrl] || '';
     }
-    return url || 'logo.jpg';
+
+    if (/^data:image\/(?:png|jpe?g|gif|webp);base64,[a-z0-9+/=\s]+$/i.test(resolvedUrl)) {
+        return resolvedUrl;
+    }
+
+    if (/^https?:\/\//i.test(resolvedUrl)) {
+        try {
+            const parsed = new URL(resolvedUrl);
+            return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.href : 'logo.jpg';
+        } catch (_) {
+            return 'logo.jpg';
+        }
+    }
+
+    if (/^[a-z0-9À-ÿ_./%()\-]+$/i.test(resolvedUrl) && !resolvedUrl.includes('..')) {
+        return resolvedUrl;
+    }
+
+    return 'logo.jpg';
+}
+
+function openAccessibleLayer(layer) {
+    if (!layer) return;
+    lastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    layer.classList.add('open');
+    layer.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    window.setTimeout(() => {
+        const focusTarget = layer.querySelector('.btn-close-modal, .btn-close-cart, button, [href], input, select, textarea');
+        if (focusTarget instanceof HTMLElement) focusTarget.focus();
+    }, 0);
+}
+
+function closeAccessibleLayer(layer) {
+    if (!layer) return;
+    layer.classList.remove('open');
+    layer.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+    if (lastFocusedElement && document.contains(lastFocusedElement)) {
+        lastFocusedElement.focus();
+    }
+    lastFocusedElement = null;
+}
+
+function initAccessibleLayers() {
+    document.addEventListener('keydown', (event) => {
+        const openLayer = document.querySelector('.cart-overlay.open, .modal-overlay.open');
+        if (!openLayer) return;
+
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            if (openLayer === DOM.cartOverlay) closeCartDrawer();
+            else if (openLayer === DOM.checkoutModal) closeCheckoutModal();
+            else if (openLayer === DOM.productModal) closeProductModal();
+            else if (openLayer === DOM.howItWorksModal) closeHowItWorksModal();
+            return;
+        }
+
+        if (event.key !== 'Tab') return;
+        const focusable = [...openLayer.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+            .filter(element => element instanceof HTMLElement && element.offsetParent !== null);
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+        }
+    });
 }
 
 window.changeModalMainImage = function(src, element) {
@@ -3038,7 +3129,7 @@ window.changeModalMainImage = function(src, element) {
         // Atualizar também o fundo do zoom
         const result = document.getElementById('zoom-result');
         if (result) {
-            result.style.backgroundImage = `url('${mainImg.src}')`;
+            result.style.backgroundImage = `url("${mainImg.src.replace(/"/g, '%22')}")`;
         }
     }
     const thumbs = document.querySelectorAll('.gallery-thumb, .gallery-photo-card');
@@ -3292,16 +3383,38 @@ function initSlider() {
     const list = banners.length > 0 ? banners : [...BANNERS_DATA];
     
     DOM.sliderContainer.innerHTML = list.map((banner, index) => `
-        <div class="slide ${index === 0 ? 'active' : ''}" data-index="${index}" onclick="scrollToProducts()" style="cursor: pointer;">
-            <div class="slide-bg" style="background-image: url('${getProductImageSrc(banner.image)}')"></div>
-        </div>
+        <button type="button" class="slide ${index === 0 ? 'active' : ''}" data-index="${index}" aria-label="${escapeAttribute(banner.title || `Banner ${index + 1}`)}: ver catálogo" aria-hidden="${index !== 0}" tabindex="${index === 0 ? '0' : '-1'}">
+            <span class="slide-bg" data-image="${escapeAttribute(getProductImageSrc(banner.image))}"></span>
+        </button>
     `).join('');
+
+    DOM.sliderContainer.querySelectorAll('.slide-bg').forEach(background => {
+        background.style.backgroundImage = `url("${background.dataset.image.replace(/"/g, '%22')}")`;
+    });
+
+    DOM.sliderContainer.querySelectorAll('.slide').forEach(slide => {
+        slide.addEventListener('click', scrollToProducts);
+    });
+
+    const sliderSection = document.getElementById('hero-slider-section');
+    if (sliderSection && !sliderSection.dataset.controlsReady) {
+        sliderSection.dataset.controlsReady = 'true';
+        sliderSection.addEventListener('mouseenter', stopSlideTimer);
+        sliderSection.addEventListener('mouseleave', startSlideTimer);
+        sliderSection.addEventListener('focusin', stopSlideTimer);
+        sliderSection.addEventListener('focusout', (event) => {
+            if (!sliderSection.contains(event.relatedTarget)) startSlideTimer();
+        });
+    }
     
     if (list.length > 1) {
         DOM.sliderDots.style.display = 'flex';
         DOM.sliderDots.innerHTML = list.map((_, index) => `
-            <span class="dot ${index === 0 ? 'active' : ''}" data-index="${index}" onclick="setSlide(${index})"></span>
+            <button type="button" class="dot ${index === 0 ? 'active' : ''}" data-index="${index}" aria-label="Mostrar banner ${index + 1}" aria-pressed="${index === 0}"></button>
         `).join('');
+        DOM.sliderDots.querySelectorAll('.dot').forEach(dot => {
+            dot.addEventListener('click', () => setSlide(Number(dot.dataset.index)));
+        });
         startSlideTimer();
     } else {
         DOM.sliderDots.style.display = 'none';
@@ -3311,6 +3424,9 @@ function initSlider() {
 
 function startSlideTimer() {
     stopSlideTimer();
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const availableBanners = banners.length > 0 ? banners : BANNERS_DATA;
+    if (availableBanners.length <= 1) return;
     slideInterval = setInterval(() => {
         const list = banners.length > 0 ? banners : [...BANNERS_DATA];
         let nextIndex = (currentSlideIndex + 1) % list.length;
@@ -3327,14 +3443,28 @@ function setSlide(index) {
     const slides = document.querySelectorAll('.slide');
     const dots = document.querySelectorAll('.dot');
     
-    slides.forEach(slide => slide.classList.remove('active'));
-    dots.forEach(dot => dot.classList.remove('active'));
+    slides.forEach(slide => {
+        slide.classList.remove('active');
+        slide.setAttribute('aria-hidden', 'true');
+        slide.tabIndex = -1;
+    });
+    dots.forEach(dot => {
+        dot.classList.remove('active');
+        dot.setAttribute('aria-pressed', 'false');
+    });
     
     const activeSlide = document.querySelector(`.slide[data-index="${index}"]`);
     const activeDot = document.querySelector(`.dot[data-index="${index}"]`);
     
-    if (activeSlide) activeSlide.classList.add('active');
-    if (activeDot) activeDot.classList.add('active');
+    if (activeSlide) {
+        activeSlide.classList.add('active');
+        activeSlide.setAttribute('aria-hidden', 'false');
+        activeSlide.tabIndex = 0;
+    }
+    if (activeDot) {
+        activeDot.classList.add('active');
+        activeDot.setAttribute('aria-pressed', 'true');
+    }
 }
 
 function scrollToProducts() {
@@ -3354,8 +3484,8 @@ function renderProductsGrid() {
         if (prod.active === false) return false;
         
         const matchCategory = activeCategory === 'all' || prod.category === activeCategory;
-        const matchSearch = prod.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            prod.description.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchSearch = String(prod.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            String(prod.description || '').toLowerCase().includes(searchQuery.toLowerCase());
         const matchPrice = prod.price >= minPriceFilter && prod.price <= maxPriceFilter;
         return matchCategory && matchSearch && matchPrice;
     });
@@ -3402,30 +3532,28 @@ function renderProductsGrid() {
         return;
     }
     
-    // Render Grid (Com badges alternados discretos e botão 'Adicionar à sacola')
-    DOM.productsGrid.innerHTML = filteredProducts.map((prod, index) => {
-        let badgeText = '';
-        if (index % 4 === 0) badgeText = 'Mais vendido';
-        else if (index % 4 === 1) badgeText = 'Novidade';
-        else if (index % 4 === 2 && prod.price < 15) badgeText = 'Oferta';
-        
-        const badgeHtml = badgeText ? `<span class="product-badge">${badgeText}</span>` : '';
+    // Render Grid. Selos comerciais só aparecem quando cadastrados explicitamente.
+    DOM.productsGrid.innerHTML = filteredProducts.map((prod) => {
+        const badgeText = typeof prod.badge === 'string' ? prod.badge.trim() : '';
+        const badgeHtml = badgeText ? `<span class="product-badge">${escapeHtml(badgeText)}</span>` : '';
+        const productName = escapeHtml(prod.name);
+        const imageSrc = escapeAttribute(getProductImageSrc(prod.imageUrl));
         
         return `
             <article class="product-card">
-                <div class="product-img-wrapper" onclick="openProductModal(${prod.id})">
+                <button type="button" class="product-img-wrapper product-open-btn" onclick="openProductModal(${Number(prod.id)})" aria-label="Ver detalhes de ${escapeAttribute(prod.name)}">
                     ${badgeHtml}
-                    <img class="product-img" src="${getProductImageSrc(prod.imageUrl)}" alt="${prod.name}" onerror="this.src='logo.jpg'" loading="lazy">
-                </div>
+                    <img class="product-img" src="${imageSrc}" alt="${escapeAttribute(prod.name)}" onerror="this.src='logo.jpg'" loading="lazy" decoding="async">
+                </button>
                 <div class="product-info">
-                    <span class="product-category">${prod.categoryName}</span>
-                    <h3 class="product-name" onclick="openProductModal(${prod.id})">${prod.name}</h3>
+                    <span class="product-category">${escapeHtml(prod.categoryName)}</span>
+                    <h3 class="product-name">${productName}</h3>
                     <div class="product-price-row">
                         <span class="product-price-prefix">Por</span>
                         <span class="product-price">${formatCurrency(prod.price)}</span>
                         ${prod.name.includes('/ Un') || prod.name.includes('RENDA') ? '<span class="product-price-unit">/ Un</span>' : ''}
                     </div>
-                    <button class="product-btn-add" onclick="quickAddToCart(${prod.id})">Adicionar à sacola</button>
+                    <button type="button" class="product-btn-add" onclick="quickAddToCart(${Number(prod.id)})">Escolher tamanho</button>
                 </div>
             </article>
         `;
@@ -3458,9 +3586,8 @@ function saveCart() {
 function quickAddToCart(productId) {
     const product = products.find(p => p.id === productId);
     if (!product) return;
-    
-    addToCart(product, 'M', 1);
-    openCartDrawer();
+
+    openProductModal(productId);
 }
 
 function addToCart(product, size, qty) {
@@ -3539,22 +3666,22 @@ function updateCartUI() {
     
     DOM.cartItemsList.innerHTML = cart.map(item => `
         <div class="cart-item">
-            <img class="cart-item-img" src="${getProductImageSrc(item.product.imageUrl)}" alt="${item.product.name}" onerror="this.src='logo.jpg'">
+            <img class="cart-item-img" src="${escapeAttribute(getProductImageSrc(item.product.imageUrl))}" alt="${escapeAttribute(item.product.name)}" onerror="this.src='logo.jpg'" loading="lazy" decoding="async">
             <div class="cart-item-details">
                 <div class="cart-item-header">
-                    <h4 class="cart-item-title">${item.product.name}</h4>
-                    <button class="btn-remove-item" onclick="removeCartItem('${item.id}')" title="Remover item">
+                    <h4 class="cart-item-title">${escapeHtml(item.product.name)}</h4>
+                    <button type="button" class="btn-remove-item" data-cart-id="${escapeAttribute(item.id)}" onclick="removeCartItem(this.dataset.cartId)" title="Remover item" aria-label="Remover ${escapeAttribute(item.product.name)} da sacola">
                         <svg viewBox="0 0 24 24">
                             <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
                         </svg>
                     </button>
                 </div>
-                <div class="cart-item-meta">Tamanho: ${item.size}</div>
+                <div class="cart-item-meta">Tamanho: ${escapeHtml(item.size)}</div>
                 <div class="cart-item-footer">
                     <div class="quantity-control">
-                        <button onclick="updateCartQuantity('${item.id}', ${item.quantity - 1})">-</button>
+                        <button type="button" data-cart-id="${escapeAttribute(item.id)}" onclick="updateCartQuantity(this.dataset.cartId, ${item.quantity - 1})" aria-label="Diminuir quantidade">-</button>
                         <span class="quantity-val">${item.quantity}</span>
-                        <button onclick="updateCartQuantity('${item.id}', ${item.quantity + 1})">+</button>
+                        <button type="button" data-cart-id="${escapeAttribute(item.id)}" onclick="updateCartQuantity(this.dataset.cartId, ${item.quantity + 1})" aria-label="Aumentar quantidade">+</button>
                     </div>
                     <span class="cart-item-price">${formatCurrency(item.product.price * item.quantity)}</span>
                 </div>
@@ -3569,13 +3696,11 @@ function updateCartUI() {
 
 // --- Gaveta de Compras ---
 function openCartDrawer() {
-    DOM.cartOverlay.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    openAccessibleLayer(DOM.cartOverlay);
 }
 
 function closeCartDrawer() {
-    DOM.cartOverlay.classList.remove('open');
-    document.body.style.overflow = '';
+    closeAccessibleLayer(DOM.cartOverlay);
 }
 
 // --- Detalhes do Produto Modal (Revisto com estilo clean) ---
@@ -3616,29 +3741,30 @@ function openProductModal(productId) {
     
     // Garantir lista de imagens (no máximo 5)
     const productImages = (product.images && product.images.length > 0 ? product.images : [product.imageUrl]).slice(0, 5);
+    const safeMainImage = escapeAttribute(getProductImageSrc(product.imageUrl));
 
     modalContent.innerHTML = `
         <div class="product-detail-layout" style="position: relative;">
             <div class="product-detail-img-area">
                 <div class="main-image-container" id="modal-main-img-container" style="position: relative; border: 1px solid var(--border-color); border-radius: var(--border-radius-md); overflow: hidden; background-color: white; aspect-ratio: 4/5; display: flex; align-items: center; justify-content: center;">
-                    <img id="modal-main-img" src="${getProductImageSrc(product.imageUrl)}" alt="${product.name}" onerror="this.src='logo.jpg'" style="width: 100%; height: 100%; object-fit: cover;">
+                    <img id="modal-main-img" src="${safeMainImage}" alt="${escapeAttribute(product.name)}" onerror="this.src='logo.jpg'" style="width: 100%; height: 100%; object-fit: cover;" decoding="async">
                     <div id="zoom-lens" style="display: none; position: absolute; border: 2px solid var(--rose-dark, #ab8f8e); background-color: rgba(255, 255, 255, 0.25); pointer-events: none; width: 120px; height: 150px; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.08); z-index: 5;"></div>
                 </div>
             </div>
             
             <div class="product-detail-info">
-                <span class="product-detail-category">${product.categoryName}</span>
-                <h3 class="product-detail-title">${product.name}</h3>
+                <span class="product-detail-category">${escapeHtml(product.categoryName)}</span>
+                <h3 class="product-detail-title">${escapeHtml(product.name)}</h3>
                 <div class="product-detail-price">${formatCurrency(product.price)}</div>
                 
                 <h4 class="product-detail-desc-title">Descrição</h4>
-                <p class="product-detail-desc">${displayDesc}</p>
+                <p class="product-detail-desc">${escapeHtml(displayDesc)}</p>
                 
                 <div class="size-selector-label" style="${isOutOfStock ? 'color: #dc3545; font-weight: 700;' : ''}">${isOutOfStock ? '⚠️ Produto indisponível (Sem estoque)' : 'Selecione o Tamanho'}</div>
                 ${isOutOfStock ? '' : `
                 <div class="size-options">
                     ${availableSizes.map(size => `
-                        <button class="size-btn ${selectedSize === size ? 'selected' : ''}" onclick="selectSize('${size}', this)">${size}</button>
+                        <button type="button" class="size-btn ${selectedSize === size ? 'selected' : ''}" data-size="${escapeAttribute(size)}" onclick="selectSize(this.dataset.size, this)" aria-pressed="${selectedSize === size}">${escapeHtml(size)}</button>
                     `).join('')}
                 </div>
                 `}
@@ -3653,9 +3779,9 @@ function openProductModal(productId) {
                 <div class="qty-label">Quantidade</div>
                 <div class="qty-and-cart-row">
                     <div class="qty-spinner">
-                        <button onclick="decrementModalQty()">-</button>
-                        <input type="number" id="modal-qty-input" value="1" min="1">
-                        <button onclick="incrementModalQty()">+</button>
+                        <button type="button" onclick="decrementModalQty()" aria-label="Diminuir quantidade">-</button>
+                        <input type="number" id="modal-qty-input" value="1" min="1" max="99" inputmode="numeric" aria-label="Quantidade">
+                        <button type="button" onclick="incrementModalQty()" aria-label="Aumentar quantidade">+</button>
                     </div>
                     <button class="btn-add-to-cart-large" onclick="addModalProductToCart()">
                         <svg viewBox="0 0 24 24">
@@ -3674,50 +3800,52 @@ function openProductModal(productId) {
                 <h4 style="font-size: 0.85rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px;">Outras fotos cadastradas</h4>
                 <div class="product-gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px;">
                     ${productImages.map((img, idx) => `
-                        <div class="gallery-photo-card ${idx === 0 ? 'active' : ''}" onclick="changeModalMainImage('${img}', this)">
-                            <img src="${getProductImageSrc(img)}" alt="Foto ${idx + 1}" onerror="this.src='logo.jpg'" style="width: 100%; height: 100%; object-fit: cover;">
-                        </div>
+                        <button type="button" class="gallery-photo-card ${idx === 0 ? 'active' : ''}" data-image="${escapeAttribute(getProductImageSrc(img))}" onclick="changeModalMainImage(this.dataset.image, this)" aria-label="Mostrar foto ${idx + 1} de ${escapeAttribute(product.name)}">
+                            <img src="${escapeAttribute(getProductImageSrc(img))}" alt="Foto ${idx + 1} de ${escapeAttribute(product.name)}" onerror="this.src='logo.jpg'" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy" decoding="async">
+                        </button>
                     `).join('')}
                 </div>
             </div>
         ` : ''}
     `;
     
-    DOM.productModal.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    openAccessibleLayer(DOM.productModal);
     
     // Inicializar o efeito de zoom na imagem
     setTimeout(initImageZoom, 100);
 }
 
 function closeProductModal() {
-    DOM.productModal.classList.remove('open');
+    closeAccessibleLayer(DOM.productModal);
     currentProductInModal = null;
-    document.body.style.overflow = '';
 }
 
 function selectSize(size, element) {
     selectedSize = size;
     const buttons = document.querySelectorAll('.size-options .size-btn');
-    buttons.forEach(btn => btn.classList.remove('selected'));
+    buttons.forEach(btn => {
+        btn.classList.remove('selected');
+        btn.setAttribute('aria-pressed', 'false');
+    });
     element.classList.add('selected');
+    element.setAttribute('aria-pressed', 'true');
 }
 
 function incrementModalQty() {
     const input = document.getElementById('modal-qty-input');
-    if (input) input.value = parseInt(input.value) + 1;
+    if (input) input.value = Math.min(99, (parseInt(input.value, 10) || 1) + 1);
 }
 
 function decrementModalQty() {
     const input = document.getElementById('modal-qty-input');
-    if (input && parseInt(input.value) > 1) input.value = parseInt(input.value) - 1;
+    if (input) input.value = Math.max(1, (parseInt(input.value, 10) || 1) - 1);
 }
 
 function addModalProductToCart() {
     if (!currentProductInModal || !selectedSize) return;
     
     const qtyInput = document.getElementById('modal-qty-input');
-    const qty = qtyInput ? parseInt(qtyInput.value) : 1;
+    const qty = qtyInput ? Math.min(99, Math.max(1, parseInt(qtyInput.value, 10) || 1)) : 1;
     
     addToCart(currentProductInModal, selectedSize, qty);
     closeProductModal();
@@ -3728,13 +3856,11 @@ function addModalProductToCart() {
 function openCheckoutModal() {
     if (cart.length === 0) return;
     closeCartDrawer();
-    DOM.checkoutModal.classList.add('open');
-    document.body.style.overflow = 'hidden';
+    openAccessibleLayer(DOM.checkoutModal);
 }
 
 function closeCheckoutModal() {
-    DOM.checkoutModal.classList.remove('open');
-    document.body.style.overflow = '';
+    closeAccessibleLayer(DOM.checkoutModal);
 }
 
 function submitCheckout(event) {
@@ -3775,10 +3901,12 @@ function submitCheckout(event) {
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://api.whatsapp.com/send?phone=5522988524928&text=${encodedMessage}`;
     
-    clearCart();
     closeCheckoutModal();
     
-    window.open(whatsappUrl, '_blank');
+    const whatsappWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    if (!whatsappWindow) {
+        window.location.href = whatsappUrl;
+    }
 }
 
 
@@ -3814,8 +3942,9 @@ function setCategory(categorySlug, event) {
 function initFilters() {
     DOM.navLinks.forEach(link => {
         link.addEventListener('click', (e) => {
-            e.preventDefault();
             const cat = link.getAttribute('data-category');
+            if (!cat) return;
+            e.preventDefault();
             setCategory(cat, e);
             scrollToProducts();
         });
@@ -3871,6 +4000,7 @@ function initFilters() {
 
 // --- Inicialização ---
 document.addEventListener('DOMContentLoaded', () => {
+    initAccessibleLayers();
     ImageStore.init().then(() => {
         return ImageStore.getAll();
     }).then((storedImages) => {
@@ -3904,16 +4034,14 @@ function openHowItWorksModal(event) {
     if (event) event.preventDefault();
     const modal = DOM.howItWorksModal;
     if (modal) {
-        modal.classList.add('open');
-        document.body.style.overflow = 'hidden';
+        openAccessibleLayer(modal);
     }
 }
 
 function closeHowItWorksModal() {
     const modal = DOM.howItWorksModal;
     if (modal) {
-        modal.classList.remove('open');
-        document.body.style.overflow = '';
+        closeAccessibleLayer(modal);
     }
 }
 

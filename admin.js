@@ -4,7 +4,7 @@
 ========================================================================
 */
 
-// --- Banco de Dados Local dos Produtos (22 Itens Oficiais para Reset de Fábrica) ---
+// --- Banco de Dados Local dos Produtos para Reset de Fábrica ---
 const FACTORY_PRODUCTS_DATA = [
     {
         "id": 1,
@@ -2936,7 +2936,7 @@ const BANNERS_DATA = [
         id: 1,
         title: "Nana Moda Íntima",
         text: "Conforto, beleza e elegância para todos os momentos. Escolha suas peças favoritas e finalize seu pedido pelo WhatsApp de forma simples, rápida e segura.",
-        image: "banner_generico.png"
+        image: "banner_generico.webp"
     }
 ];
 let banners = [];
@@ -3049,6 +3049,19 @@ const DOMAdmin = {
 };
 
 // --- Resolver Fonte de Imagem (Cache ou URL) ---
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function escapeAttribute(value) {
+    return escapeHtml(value);
+}
+
 function getProductImageSrc(url) {
     if (url && url.startsWith('local-img-')) {
         return localImagesMap[url] || 'logo.jpg';
@@ -3085,31 +3098,14 @@ function loadUsers() {
         const storedUsers = localStorage.getItem('nana_admin_users');
         if (storedUsers) {
             users = JSON.parse(storedUsers);
-            if (users.length === 0) {
-                users = [
-                    {
-                        id: "u-admin",
-                        type: "credentials",
-                        name: "ADMINISTRADOR",
-                        email: "admin",
-                        role: "admin",
-                        password: "nana"
-                    }
-                ];
-                localStorage.setItem('nana_admin_users', JSON.stringify(users));
+            if (!Array.isArray(users)) users = [];
+            const hasLegacyDefault = users.length === 1 && users[0]?.email === 'admin' && users[0]?.password === 'nana';
+            if (hasLegacyDefault) {
+                users = [];
+                saveUsers();
             }
         } else {
-            users = [
-                {
-                    id: "u-admin",
-                    type: "credentials",
-                    name: "ADMINISTRADOR",
-                    email: "admin",
-                    role: "admin",
-                    password: "nana"
-                }
-            ];
-            localStorage.setItem('nana_admin_users', JSON.stringify(users));
+            users = [];
         }
     } catch (e) {
         console.error("Erro ao carregar usuários:", e);
@@ -3125,54 +3121,6 @@ function saveUsers() {
     }
 }
 
-// --- Lógica de Decodificação do Token JWT do Google ---
-function decodeJwt(token) {
-    try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-        }).join(''));
-        return JSON.parse(jsonPayload);
-    } catch (e) {
-        console.error("Falha ao decodificar JWT do Google:", e);
-        return null;
-    }
-}
-
-// --- Inicialização do Google Sign-In SDK ---
-function initGoogleSignIn() {
-    const isLocalFile = window.location.protocol === 'file:';
-    const realContainer = document.getElementById('google-real-container');
-    const mockContainer = document.getElementById('google-mock-container');
-    
-    if (isLocalFile) {
-        if (realContainer) realContainer.style.display = 'none';
-        if (mockContainer) mockContainer.style.display = 'block';
-    } else {
-        if (realContainer) realContainer.style.display = 'block';
-        if (mockContainer) mockContainer.style.display = 'none';
-        
-        try {
-            google.accounts.id.initialize({
-                client_id: "109283091283-placeholder.apps.googleusercontent.com", 
-                callback: (response) => {
-                    handleGoogleLogin(response.credential);
-                }
-            });
-            google.accounts.id.renderButton(
-                document.getElementById("google-signin-btn"),
-                { theme: "outline", size: "large", locale: "pt_BR", width: "320" }
-            );
-            google.accounts.id.prompt(); 
-        } catch (e) {
-            console.warn("Erro ao iniciar Google Identity SDK:", e);
-            if (realContainer) realContainer.style.display = 'none';
-            if (mockContainer) mockContainer.style.display = 'block';
-        }
-    }
-}
-
 // --- Handlers de Autenticação ---
 function checkAuth() {
     loadUsers();
@@ -3180,7 +3128,14 @@ function checkAuth() {
     // Recupera sessão ativa
     const activeSession = sessionStorage.getItem('nana_admin_user_session');
     if (activeSession) {
-        currentUser = JSON.parse(activeSession);
+        try {
+            const parsedSession = JSON.parse(activeSession);
+            currentUser = users.find(user => user.id === parsedSession.id) || null;
+            if (!currentUser) sessionStorage.removeItem('nana_admin_user_session');
+        } catch (_) {
+            currentUser = null;
+            sessionStorage.removeItem('nana_admin_user_session');
+        }
     } else {
         currentUser = null;
     }
@@ -3212,51 +3167,10 @@ function checkAuth() {
         if (DOMAdmin.loginScreen) DOMAdmin.loginScreen.style.display = 'flex';
         if (DOMAdmin.dashboardLayout) DOMAdmin.dashboardLayout.style.display = 'none';
         
-        if (DOMAdmin.adminSetupMsg) DOMAdmin.adminSetupMsg.style.display = 'none';
-        if (DOMAdmin.loginWelcomeMsg) DOMAdmin.loginWelcomeMsg.textContent = "Faça login para gerenciar o catálogo.";
-        if (DOMAdmin.btnLoginSubmit) DOMAdmin.btnLoginSubmit.textContent = "Entrar com Usuário Local";
-    }
-}
-
-// Google Login real callback
-function handleGoogleLogin(credential) {
-    const payload = decodeJwt(credential);
-    if (!payload || !payload.email) {
-        alert("Erro ao ler dados da Conta Google.");
-        return;
-    }
-    
-    processOAuthAccess(payload.email, payload.name || payload.email.split('@')[0]);
-}
-
-// Simulated Google Login (Mock)
-function handleMockLogin() {
-    const email = prompt("Simulador de Login Google:\nDigite um e-mail de teste para autenticar:");
-    if (email === null) return;
-    
-    const emailTrim = email.trim();
-    if (!emailTrim || !emailTrim.includes('@')) {
-        alert("Por favor, digite um e-mail válido.");
-        return;
-    }
-    
-    const name = emailTrim.split('@')[0].toUpperCase();
-    processOAuthAccess(emailTrim.toLowerCase(), name);
-}
-
-// Processa login do OAuth
-function processOAuthAccess(email, name) {
-    loadUsers();
-    
-    // Valida contra a base de usuários cadastrados
-    const found = users.find(u => u.email === email && u.type === 'google');
-    if (found) {
-        currentUser = found;
-        sessionStorage.setItem('nana_admin_user_session', JSON.stringify(currentUser));
-        if (DOMAdmin.loginErrorMsg) DOMAdmin.loginErrorMsg.style.display = 'none';
-        checkAuth();
-    } else {
-        showLoginError("Acesso negado: O e-mail Google '" + email + "' não está autorizado no painel.");
+        const needsSetup = users.length === 0;
+        if (DOMAdmin.adminSetupMsg) DOMAdmin.adminSetupMsg.style.display = needsSetup ? 'block' : 'none';
+        if (DOMAdmin.loginWelcomeMsg) DOMAdmin.loginWelcomeMsg.textContent = needsSetup ? "Configure o editor neste navegador." : "Faça login para editar o catálogo local.";
+        if (DOMAdmin.btnLoginSubmit) DOMAdmin.btnLoginSubmit.textContent = needsSetup ? "Criar administrador local" : "Entrar no editor local";
     }
 }
 
@@ -3271,6 +3185,32 @@ function handleCredentialsLogin(e) {
     }
     
     loadUsers();
+
+    if (users.length === 0) {
+        if (usernameInput.length < 3) {
+            showLoginError("Use um nome de usuário com pelo menos 3 caracteres.");
+            return;
+        }
+        if (pwdInput.length < 8) {
+            showLoginError("Use uma senha com pelo menos 8 caracteres.");
+            return;
+        }
+
+        currentUser = {
+            id: `u-${Date.now()}`,
+            type: 'credentials',
+            name: usernameInput.toUpperCase(),
+            email: usernameInput,
+            role: 'admin',
+            password: pwdInput
+        };
+        users = [currentUser];
+        saveUsers();
+        sessionStorage.setItem('nana_admin_user_session', JSON.stringify(currentUser));
+        DOMAdmin.loginPassword.value = '';
+        checkAuth();
+        return;
+    }
     
     // Procura usuário credentials
     const found = users.find(u => u.email === usernameInput && u.type === 'credentials');
@@ -3315,8 +3255,8 @@ function handlePasswordChange(e) {
         return;
     }
     
-    if (newPwd.length < 4) {
-        alert("A nova senha deve ter pelo menos 4 caracteres.");
+    if (newPwd.length < 8) {
+        alert("A nova senha deve ter pelo menos 8 caracteres.");
         return;
     }
     
@@ -3353,15 +3293,15 @@ function renderAdminUsersTable() {
         
         return `
             <tr>
-                <td style="font-weight: 600; font-size: 0.85rem; color: var(--primary-dark);">${u.name}</td>
-                <td style="font-size: 0.85rem; color: var(--text-color);">${u.email}</td>
+                <td style="font-weight: 600; font-size: 0.85rem; color: var(--primary-dark);">${escapeHtml(u.name)}</td>
+                <td style="font-size: 0.85rem; color: var(--text-color);">${escapeHtml(u.email)}</td>
                 <td>${typeBadge}</td>
                 <td>${roleBadge}</td>
                 <td>
                     ${isSelf ? `
                         <span style="font-size: 0.75rem; color: var(--text-muted); font-style: italic;">Você</span>
                     ` : `
-                        <button type="button" class="btn-remove-item" onclick="deleteUser('${u.id}')" style="padding: 4px; border: 1px solid var(--border-color); border-radius: 4px; display: flex; align-items: center; justify-content: center; background: none; cursor: pointer; height: 28px; width: 28px;" title="Remover Usuário">
+                        <button type="button" class="btn-remove-item" data-user-id="${escapeAttribute(u.id)}" onclick="deleteUser(this.dataset.userId)" style="padding: 4px; border: 1px solid var(--border-color); border-radius: 4px; display: flex; align-items: center; justify-content: center; background: none; cursor: pointer; height: 28px; width: 28px;" title="Remover Usuário">
                             <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: var(--text-muted);"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
                         </button>
                     `}
@@ -3374,7 +3314,7 @@ function renderAdminUsersTable() {
 function openAddUserModal() {
     if (DOMAdmin.userModal) {
         DOMAdmin.userForm.reset();
-        toggleUserFormFields('google');
+        toggleUserFormFields('credentials');
         DOMAdmin.userModal.classList.add('open');
     }
 }
@@ -3413,6 +3353,11 @@ function handleAddUserSubmit(e) {
     
     if (!nameVal || !identifierVal) {
         alert("Preencha todos os campos obrigatórios.");
+        return;
+    }
+
+    if (passwordVal.length < 8) {
+        alert("A senha deve ter pelo menos 8 caracteres.");
         return;
     }
     
@@ -3682,9 +3627,9 @@ function renderAdminProductsTable() {
     
     DOMAdmin.productsTableBody.innerHTML = filtered.map(prod => `
         <tr>
-            <td><img class="admin-table-img" src="${getProductImageSrc(prod.imageUrl)}" alt="${prod.name}" onerror="this.src='logo.jpg'"></td>
-            <td style="font-weight: 600; font-size: 0.85rem; color: var(--primary-dark);">${prod.name}</td>
-            <td><span class="product-category" style="font-size: 0.7rem;">${prod.categoryName}</span></td>
+            <td><img class="admin-table-img" src="${escapeAttribute(getProductImageSrc(prod.imageUrl))}" alt="${escapeAttribute(prod.name)}" onerror="this.src='logo.jpg'"></td>
+            <td style="font-weight: 600; font-size: 0.85rem; color: var(--primary-dark);">${escapeHtml(prod.name)}</td>
+            <td><span class="product-category" style="font-size: 0.7rem;">${escapeHtml(prod.categoryName)}</span></td>
             <td style="font-weight: 700; color: var(--primary-dark);">${formatCurrency(prod.price)}</td>
             <td>
                 <div style="display: flex; gap: 8px;">
@@ -3805,7 +3750,7 @@ function renderImagePreviews() {
         
         return `
             <div class="image-preview-card">
-                <img src="${getProductImageSrc(img)}" alt="Miniatura ${idx + 1}" onerror="this.src='logo.jpg'">
+                <img src="${escapeAttribute(getProductImageSrc(img))}" alt="Miniatura ${idx + 1}" onerror="this.src='logo.jpg'">
                 <div class="image-preview-controls">
                     <button type="button" class="image-preview-btn" onclick="moveTempImage(${idx}, -1)" ${isFirst ? 'disabled style="opacity: 0.3; cursor: default;"' : ''} title="Mover para esquerda">
                         <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
@@ -3895,12 +3840,15 @@ function moveTempImage(idx, direction) {
 // --- Lógica do Gerenciador de Banners ---
 function loadBanners() {
     try {
-        const stored = localStorage.getItem('nana_banners_v4');
+        const stored = localStorage.getItem('nana_banners_v5') || localStorage.getItem('nana_banners_v4');
         if (stored) {
             banners = JSON.parse(stored);
+            const isLegacyDefault = banners.length === 1 && banners[0]?.image === 'banner_generico.png';
+            if (isLegacyDefault) banners[0].image = 'banner_generico.webp';
+            localStorage.setItem('nana_banners_v5', JSON.stringify(banners));
         } else {
             banners = [...BANNERS_DATA];
-            localStorage.setItem('nana_banners_v4', JSON.stringify(banners));
+            localStorage.setItem('nana_banners_v5', JSON.stringify(banners));
         }
     } catch(e) {
         console.error("Erro ao carregar banners:", e);
@@ -3937,13 +3885,13 @@ function renderAdminBanners() {
         DOMAdmin.bannersTableBody.innerHTML = banners.map((banner, index) => `
             <tr>
                 <td>
-                    <img src="${getProductImageSrc(banner.image)}" alt="Banner Mini" style="width: 120px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-color); background: #eee;">
+                    <img src="${escapeAttribute(getProductImageSrc(banner.image))}" alt="Banner Mini" style="width: 120px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border-color); background: #eee;">
                 </td>
                 <td style="font-weight: 600; color: var(--primary-dark); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    ${banner.title || '<span style="color: var(--text-muted); font-weight: normal; font-style: italic;">Sem título</span>'}
+                    ${banner.title ? escapeHtml(banner.title) : '<span style="color: var(--text-muted); font-weight: normal; font-style: italic;">Sem título</span>'}
                 </td>
                 <td style="color: var(--text-muted); max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                    ${banner.text || '<span style="color: var(--text-muted); font-style: italic;">Sem texto</span>'}
+                    ${banner.text ? escapeHtml(banner.text) : '<span style="color: var(--text-muted); font-style: italic;">Sem texto</span>'}
                 </td>
                 <td>
                     <button type="button" class="btn-preview-order" onclick="deleteBanner(${banner.id})" style="background-color: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Excluir</button>
@@ -4011,7 +3959,7 @@ function deleteBanner(bannerId) {
     }
     
     banners = banners.filter(b => b.id !== bannerId);
-    localStorage.setItem('nana_banners_v4', JSON.stringify(banners));
+    localStorage.setItem('nana_banners_v5', JSON.stringify(banners));
     renderAdminBanners();
 }
 
@@ -4044,7 +3992,7 @@ function handleBannerFormSubmit(event) {
         image: tempBannerImage
     });
     
-    localStorage.setItem('nana_banners_v4', JSON.stringify(banners));
+    localStorage.setItem('nana_banners_v5', JSON.stringify(banners));
     resetBannerForm();
     renderAdminBanners();
     alert("Banner adicionado com sucesso!");
@@ -4147,7 +4095,7 @@ function importProductsBackup(event) {
 }
 
 function resetToFactorySettings() {
-    if (confirm("ATENÇÃO: Isso apagará todas as suas customizações e redefinirá os 22 produtos originais de fábrica. Continuar?")) {
+    if (confirm("ATENÇÃO: Isso apagará todas as suas customizações e restaurará o catálogo original de fábrica. Continuar?")) {
         products = FACTORY_PRODUCTS_DATA.map(p => {
             const copy = { ...p };
             if (copy.images && Array.isArray(copy.images)) {
@@ -4171,6 +4119,20 @@ function resetToFactorySettings() {
 
 // --- Inicialização da Aplicação Admin ---
 document.addEventListener('DOMContentLoaded', () => {
+    const isLocalAdminEnvironment = window.location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    if (!isLocalAdminEnvironment) {
+        document.body.innerHTML = `
+            <main style="min-height:100vh;display:grid;place-items:center;padding:24px;background:var(--bg-primary);">
+                <section style="width:min(560px,100%);padding:36px;background:var(--bg-off-white);border:1px solid var(--border-color);border-radius:var(--border-radius-md);box-shadow:var(--shadow-md);text-align:center;">
+                    <img src="logo.jpg" alt="Nana Moda Íntima" style="width:140px;height:auto;margin:0 auto 24px;">
+                    <h1 style="color:var(--primary-dark);font-size:1.7rem;margin-bottom:12px;">Painel público desativado</h1>
+                    <p style="color:var(--text-color);line-height:1.7;margin-bottom:22px;">Este editor salva informações apenas no navegador e, por segurança, não está disponível no site publicado. A administração compartilhada será ativada quando houver autenticação e banco de dados próprios.</p>
+                    <a href="index.html" class="btn-checkout-link" style="display:inline-flex;width:auto;margin:0;padding:11px 24px;">Voltar ao catálogo</a>
+                </section>
+            </main>`;
+        return;
+    }
+
     // 1. Inicializa Conexão IndexedDB e Carrega Imagens em Cache
     ImageStore.init().then(() => {
         return ImageStore.getAll();
@@ -4183,8 +4145,6 @@ document.addEventListener('DOMContentLoaded', () => {
         checkAuth();
         loadBanners();
         
-        // 3. Inicializa SDK do Google Sign-In se aplicável
-        initGoogleSignIn();
     }).catch(err => {
         console.error("Falha ao inicializar banco de imagens:", err);
         checkAuth();
@@ -4333,4 +4293,3 @@ window.openAddUserModal = openAddUserModal;
 window.closeAddUserModal = closeAddUserModal;
 window.toggleUserFormFields = toggleUserFormFields;
 window.deleteUser = deleteUser;
-window.handleMockLogin = handleMockLogin;
