@@ -3750,15 +3750,16 @@ function renderImagePreviews() {
         
         return `
             <div class="image-preview-card">
+                ${isFirst ? '<span class="image-primary-badge">Principal</span>' : ''}
                 <img src="${escapeAttribute(getProductImageSrc(img))}" alt="Miniatura ${idx + 1}" onerror="this.src='logo.jpg'">
                 <div class="image-preview-controls">
-                    <button type="button" class="image-preview-btn" onclick="moveTempImage(${idx}, -1)" ${isFirst ? 'disabled style="opacity: 0.3; cursor: default;"' : ''} title="Mover para esquerda">
+                    <button type="button" class="image-preview-btn" onclick="moveTempImage(${idx}, -1)" ${isFirst ? 'disabled' : ''} title="Mover para esquerda" aria-label="Mover imagem ${idx + 1} para a esquerda">
                         <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
                     </button>
-                    <button type="button" class="image-preview-btn delete-btn" onclick="deleteTempImage(${idx})" title="Excluir imagem">
+                    <button type="button" class="image-preview-btn delete-btn" onclick="deleteTempImage(${idx})" title="Excluir imagem" aria-label="Excluir imagem ${idx + 1}">
                         <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
                     </button>
-                    <button type="button" class="image-preview-btn" onclick="moveTempImage(${idx}, 1)" ${isLast ? 'disabled style="opacity: 0.3; cursor: default;"' : ''} title="Mover para direita">
+                    <button type="button" class="image-preview-btn" onclick="moveTempImage(${idx}, 1)" ${isLast ? 'disabled' : ''} title="Mover para direita" aria-label="Mover imagem ${idx + 1} para a direita">
                         <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
                     </button>
                 </div>
