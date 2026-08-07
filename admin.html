@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Editor Local - Nana Moda Íntima</title>
+    <title>Painel Administrativo - Nana Moda Íntima</title>
     
     <!-- Favicon -->
     <link rel="icon" href="logo.jpg" type="image/jpeg">
@@ -233,28 +233,29 @@
     <div id="admin-login-screen" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background-color: var(--bg-primary); padding: 20px;">
         <div class="login-card" style="background-color: var(--bg-off-white); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); box-shadow: var(--shadow-md); padding: 40px; width: 100%; max-width: 420px; text-align: center;">
             <img src="logo.jpg" alt="Logo Nana" style="height: 60px; width: auto; margin-bottom: 20px;">
-            <h2 style="color: var(--primary-dark); font-weight: 800; margin-bottom: 8px;">Editor Local</h2>
-            <p id="login-welcome-msg" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">Faça login para gerenciar o catálogo.</p>
+            <h2 style="color: var(--primary-dark); font-weight: 800; margin-bottom: 8px;">Painel Administrativo</h2>
+            <p id="login-welcome-msg" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">Entre para gerenciar o catálogo online.</p>
             
             <!-- Setup do Primeiro Admin (Oculto por padrão, exibido se db_usuarios_vazio) -->
             <div id="admin-setup-msg" style="display: none; background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px; border-radius: var(--border-radius-sm); font-size: 0.8rem; margin-bottom: 20px; font-weight: 600; text-align: left; line-height: 1.4;">
-                CONFIGURAÇÃO INICIAL: crie um usuário e uma senha local com pelo menos 8 caracteres. Estes dados permanecem somente neste navegador.
+                PRIMEIRO ACESSO: use o e-mail autorizado e uma senha com pelo menos 8 caracteres. Talvez seja necessário confirmar o cadastro pelo e-mail.
             </div>
             
             <!-- --- Login Usuário/Senha --- -->
             <form id="admin-login-form">
                 <div class="form-group" style="text-align: left; margin-bottom: 12px;">
-                    <label for="login-username" style="font-weight: 600; font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Usuário / E-mail</label>
-                    <input type="text" id="login-username" required placeholder="Digite seu e-mail ou usuário" style="width: 100%; padding: 10px 16px; border: 1px solid var(--border-color); border-radius: 50px; background-color: white;">
+                    <label for="login-username" style="font-weight: 600; font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">E-mail</label>
+                    <input type="email" id="login-username" required autocomplete="email" placeholder="seuemail@exemplo.com" style="width: 100%; padding: 10px 16px; border: 1px solid var(--border-color); border-radius: 50px; background-color: white;">
                 </div>
                 <div class="form-group" style="text-align: left; margin-bottom: 20px;">
                     <label for="login-password" style="font-weight: 600; font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Senha</label>
-                    <input type="password" id="login-password" required placeholder="Digite a senha" style="width: 100%; padding: 10px 16px; border: 1px solid var(--border-color); border-radius: 50px; background-color: white;">
+                    <input type="password" id="login-password" required autocomplete="current-password" minlength="8" placeholder="Digite a senha" style="width: 100%; padding: 10px 16px; border: 1px solid var(--border-color); border-radius: 50px; background-color: white;">
                 </div>
-                <button type="submit" id="btn-login-submit" class="btn-checkout-link" style="width: 100%; padding: 12px; font-weight: 700; margin-bottom: 0;">Entrar com Usuário Local</button>
+                <button type="submit" id="btn-login-submit" class="btn-checkout-link" style="width: 100%; padding: 12px; font-weight: 700; margin-bottom: 10px;">Entrar no painel</button>
+                <button type="button" id="btn-signup-admin" class="btn-keep-shopping" style="width: 100%; padding: 10px; margin: 0;">Criar primeiro acesso</button>
             </form>
             <p id="login-error-msg" style="color: #dc3545; font-size: 0.8rem; margin-top: 15px; display: none; font-weight: 600;">Acesso negado: Usuário incorreto ou e-mail não autorizado.</p>
-            <p style="margin-top: 25px; font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">Editor disponível somente neste computador para prototipação do catálogo.</p>
+            <p style="margin-top: 25px; font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">Acesso protegido pelo Supabase. Somente o e-mail autorizado pode alterar os produtos.</p>
         </div>
     </div>
  
@@ -297,9 +298,9 @@
             <div class="admin-tabs-nav">
                 <button class="admin-tab-btn active" onclick="switchAdminTab('list')" id="tab-btn-list">Produtos Cadastrados</button>
                 <button class="admin-tab-btn" onclick="switchAdminTab('form')" id="tab-btn-form">Cadastrar Novo Produto</button>
-                <button class="admin-tab-btn" onclick="switchAdminTab('banners')" id="tab-btn-banners">Gerenciar Banners</button>
+                <button class="admin-tab-btn" onclick="switchAdminTab('banners')" id="tab-btn-banners" style="display: none;">Gerenciar Banners</button>
                 <button class="admin-tab-btn" onclick="switchAdminTab('users')" id="tab-btn-users" style="display: none;">Usuários & Permissões</button>
-                <button class="admin-tab-btn" onclick="switchAdminTab('backup')" id="tab-btn-backup">Backup & Configurações</button>
+                <button class="admin-tab-btn" onclick="switchAdminTab('backup')" id="tab-btn-backup" style="display: none;">Backup & Configurações</button>
             </div>
             
             <!-- Dashboard Body -->
@@ -647,7 +648,10 @@
         </div>
     </div>
  
-    <!-- --- JS Script Link --- -->
-    <script src="admin.js?v=4.1"></script>
+    <!-- Banco online e painel -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.112.2/dist/umd/supabase.min.js"></script>
+    <script src="supabase-config.js?v=1.0"></script>
+    <script src="admin.js?v=5.0"></script>
+    <script src="admin-supabase.js?v=1.0"></script>
 </body>
 </html>

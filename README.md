@@ -14,11 +14,15 @@ npm test
 
 ## Administração
 
-O arquivo `admin.html` é somente um editor local de protótipo. Ele não publica alterações para outros dispositivos e fica bloqueado no domínio de produção. Um painel compartilhado exige autenticação e banco de dados no servidor.
+O link **Painel administrativo** no rodapé abre `admin.html`. O painel usa autenticação, banco de dados e armazenamento de imagens do Supabase; somente a conta administrativa autorizada pode alterar o catálogo. As alterações salvas aparecem na loja online em qualquer dispositivo.
+
+No primeiro acesso, a administradora informa o e-mail autorizado, cria uma senha com pelo menos oito caracteres e confirma o e-mail recebido. Depois disso, basta entrar normalmente no painel.
 
 ## Estrutura principal
 
-- `index.html`, `index.css` e `app.js`: catálogo público.
+- `index.html`, `index.css` e `app.js`: catálogo público conectado ao Supabase, com fallback estático.
+- `admin.html`, `admin.js` e `admin-supabase.js`: painel autenticado e gestão online de produtos.
+- `supabase-config.js`: conexão pública com o projeto Supabase (sem chaves administrativas).
 - `termos-de-uso.html`: trocas, devoluções e atendimento.
 - `politica-de-privacidade.html`: tratamento dos dados enviados no pedido.
 - `robots.txt` e `sitemap.xml`: indexação.
