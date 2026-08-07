@@ -2,6 +2,7 @@
     const AUTHORIZED_ADMIN_EMAIL = 'danielfigueira01@gmail.com';
     const PRODUCT_BUCKET = 'product-images';
     let onlineCategories = new Map();
+    let passwordRecoveryMode = false;
 
     function showLoginFeedback(message, isError = true) {
         if (!DOMAdmin.loginErrorMsg) return;
@@ -12,8 +13,41 @@
 
     function setLoginBusy(isBusy) {
         if (DOMAdmin.btnLoginSubmit) DOMAdmin.btnLoginSubmit.disabled = isBusy;
-        const signupButton = document.getElementById('btn-signup-admin');
-        if (signupButton) signupButton.disabled = isBusy;
+        const resetButton = document.getElementById('btn-reset-password');
+        if (resetButton) resetButton.disabled = isBusy;
+    }
+
+    function getPasswordRecoveryUrl() {
+        const recoveryUrl = new URL(window.location.pathname, window.location.origin);
+        recoveryUrl.searchParams.set('recovery', '1');
+        return recoveryUrl.toString();
+    }
+
+    function isPasswordRecoveryUrl() {
+        const query = new URLSearchParams(window.location.search);
+        const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+        return hash.get('type') === 'recovery' || (query.get('recovery') === '1' && query.has('code'));
+    }
+
+    function showPasswordRecoveryForm() {
+        passwordRecoveryMode = true;
+        showOnlineLogin();
+        const emailGroup = DOMAdmin.loginUsername?.closest('.form-group');
+        const resetButton = document.getElementById('btn-reset-password');
+        if (emailGroup) emailGroup.style.display = 'none';
+        if (resetButton) resetButton.style.display = 'none';
+        if (DOMAdmin.loginWelcomeMsg) DOMAdmin.loginWelcomeMsg.textContent = 'Digite e salve sua nova senha.';
+        if (DOMAdmin.adminSetupMsg) {
+            DOMAdmin.adminSetupMsg.textContent = 'NOVA SENHA: use pelo menos 8 caracteres e não compartilhe a senha com ninguém.';
+            DOMAdmin.adminSetupMsg.style.display = 'block';
+        }
+        if (DOMAdmin.loginPassword) {
+            DOMAdmin.loginPassword.value = '';
+            DOMAdmin.loginPassword.autocomplete = 'new-password';
+            DOMAdmin.loginPassword.placeholder = 'Crie uma nova senha';
+        }
+        if (DOMAdmin.btnLoginSubmit) DOMAdmin.btnLoginSubmit.textContent = 'Salvar nova senha';
+        showLoginFeedback('Link confirmado. Agora escolha sua nova senha.', false);
     }
 
     function showOnlineLogin() {
@@ -102,6 +136,28 @@
         event.preventDefault();
         const email = DOMAdmin.loginUsername.value.trim().toLowerCase();
         const password = DOMAdmin.loginPassword.value;
+        if (passwordRecoveryMode) {
+            if (password.length < 8) {
+                showLoginFeedback('A nova senha precisa ter pelo menos 8 caracteres.');
+                return;
+            }
+            setLoginBusy(true);
+            try {
+                const { error } = await window.nanaSupabase.auth.updateUser({ password });
+                if (error) throw error;
+                passwordRecoveryMode = false;
+                DOMAdmin.loginPassword.value = '';
+                window.history.replaceState({}, document.title, window.location.pathname);
+                showLoginFeedback('Senha atualizada com sucesso. Entrando no painel...', false);
+                await checkOnlineAuth();
+            } catch (error) {
+                showLoginFeedback('Não foi possível atualizar a senha. Solicite um novo link e tente novamente.');
+                console.error('Falha ao atualizar senha administrativa:', error);
+            } finally {
+                setLoginBusy(false);
+            }
+            return;
+        }
         setLoginBusy(true);
         try {
             const { error } = await window.nanaSupabase.auth.signInWithPassword({ email, password });
@@ -116,34 +172,23 @@
         }
     }
 
-    async function handleOnlineSignup() {
+    async function handleForgotPassword() {
         const email = DOMAdmin.loginUsername.value.trim().toLowerCase();
-        const password = DOMAdmin.loginPassword.value;
         if (email !== AUTHORIZED_ADMIN_EMAIL) {
-            showLoginFeedback('Use o e-mail autorizado para criar o acesso administrativo.');
-            return;
-        }
-        if (password.length < 8) {
-            showLoginFeedback('A senha precisa ter pelo menos 8 caracteres.');
+            showLoginFeedback('Informe o e-mail autorizado para recuperar a senha.');
             return;
         }
 
         setLoginBusy(true);
         try {
-            const { data, error } = await window.nanaSupabase.auth.signUp({
-                email,
-                password,
-                options: { emailRedirectTo: `${window.location.origin}${window.location.pathname}` }
+            const { error } = await window.nanaSupabase.auth.resetPasswordForEmail(email, {
+                redirectTo: getPasswordRecoveryUrl()
             });
             if (error) throw error;
-            if (data.session) {
-                await checkOnlineAuth();
-            } else {
-                showLoginFeedback('Cadastro iniciado. Confira seu e-mail para confirmar o acesso e depois faça login.', false);
-            }
+            showLoginFeedback('Enviamos um link para criar uma nova senha. Confira também a pasta de spam.', false);
         } catch (error) {
-            showLoginFeedback('Não foi possível criar o acesso. Se ele já existir, use o botão Entrar no painel.');
-            console.error('Falha ao criar acesso administrativo:', error);
+            showLoginFeedback('Não foi possível enviar o link agora. Aguarde alguns minutos e tente novamente.');
+            console.error('Falha ao solicitar recuperação de senha:', error);
         } finally {
             setLoginBusy(false);
         }
@@ -309,7 +354,7 @@
 
     window.initializeSupabaseAdmin = async function initializeSupabaseAdmin() {
         if (DOMAdmin.loginForm) DOMAdmin.loginForm.addEventListener('submit', handleOnlineLogin);
-        document.getElementById('btn-signup-admin')?.addEventListener('click', handleOnlineSignup);
+        document.getElementById('btn-reset-password')?.addEventListener('click', handleForgotPassword);
         DOMAdmin.btnLogout?.addEventListener('click', handleOnlineLogout);
         DOMAdmin.productForm?.addEventListener('submit', handleOnlineProductSubmit);
         if (DOMAdmin.adminSearchInput) DOMAdmin.adminSearchInput.addEventListener('input', renderAdminProductsTable);
@@ -323,8 +368,16 @@
             console.error('Falha ao preparar imagens locais:', error);
         }
 
+        window.nanaSupabase.auth.onAuthStateChange((event) => {
+            if (event === 'PASSWORD_RECOVERY') showPasswordRecoveryForm();
+        });
+
         try {
-            await checkOnlineAuth();
+            if (isPasswordRecoveryUrl()) {
+                showPasswordRecoveryForm();
+            } else {
+                await checkOnlineAuth();
+            }
         } catch (error) {
             console.error('Falha ao iniciar o painel online:', error);
             showOnlineLogin();
