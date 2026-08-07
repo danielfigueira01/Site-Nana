@@ -57,7 +57,7 @@
     async function loadOnlineProducts() {
         const { data, error } = await window.nanaSupabase
             .from('products')
-            .select('id,legacy_id,name,slug,price,description,image_url,image_urls,sizes,featured,active,sort_order,categories(name,slug)')
+            .select('id,legacy_id,name,slug,price,description,image_url,image_urls,sizes,featured,active,sort_order,categories!products_category_id_fkey(name,slug)')
             .order('sort_order', { ascending: true })
             .order('legacy_id', { ascending: true });
         if (error) throw error;

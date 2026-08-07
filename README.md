@@ -23,6 +23,7 @@ No primeiro acesso, a administradora informa o e-mail autorizado, cria uma senha
 - `index.html`, `index.css` e `app.js`: catálogo público conectado ao Supabase, com fallback estático.
 - `admin.html`, `admin.js` e `admin-supabase.js`: painel autenticado e gestão online de produtos.
 - `supabase-config.js`: conexão pública com o projeto Supabase (sem chaves administrativas).
+- `vendor/supabase.min.js`: cliente oficial Supabase 2.112.2 servido pelo próprio site.
 - `termos-de-uso.html`: trocas, devoluções e atendimento.
 - `politica-de-privacidade.html`: tratamento dos dados enviados no pedido.
 - `robots.txt` e `sitemap.xml`: indexação.
