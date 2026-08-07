@@ -1,0 +1,8 @@
+{
+  "name": "site-nana",
+  "version": "4.0.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test tests/site.test.mjs"
+  }
+}

@@ -3,16 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Gerencial - Nana Moda Íntima</title>
+    <meta name="robots" content="noindex, nofollow">
+    <title>Editor Local - Nana Moda Íntima</title>
     
     <!-- Favicon -->
     <link rel="icon" href="logo.jpg" type="image/jpeg">
     
     <!-- CSS Link -->
     <link rel="stylesheet" href="index.css">
-    
-    <!-- Google Identity Services SDK -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
     
     <!-- Custom Admin Page Styles -->
     <style>
@@ -206,34 +204,12 @@
     <div id="admin-login-screen" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; background-color: var(--bg-primary); padding: 20px;">
         <div class="login-card" style="background-color: var(--bg-off-white); border: 1px solid var(--border-color); border-radius: var(--border-radius-md); box-shadow: var(--shadow-md); padding: 40px; width: 100%; max-width: 420px; text-align: center;">
             <img src="logo.jpg" alt="Logo Nana" style="height: 60px; width: auto; margin-bottom: 20px;">
-            <h2 style="color: var(--primary-dark); font-weight: 800; margin-bottom: 8px;">Painel Gerencial</h2>
+            <h2 style="color: var(--primary-dark); font-weight: 800; margin-bottom: 8px;">Editor Local</h2>
             <p id="login-welcome-msg" style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 24px;">Faça login para gerenciar o catálogo.</p>
             
             <!-- Setup do Primeiro Admin (Oculto por padrão, exibido se db_usuarios_vazio) -->
             <div id="admin-setup-msg" style="display: none; background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px; border-radius: var(--border-radius-sm); font-size: 0.8rem; margin-bottom: 20px; font-weight: 600; text-align: left; line-height: 1.4;">
-                ⚠️ CONFIGURAÇÃO INICIAL: Nenhum usuário cadastrado. O primeiro login (Google ou Conta Local criada abaixo) se tornará o Administrador principal.
-            </div>
-            
-            <!-- --- Login Google --- -->
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 25px; width: 100%;">
-                <!-- Container Oficial Google (Exibido se http/https) -->
-                <div id="google-real-container" style="display: none; width: 100%;">
-                    <div id="google-signin-btn" style="display: flex; justify-content: center;"></div>
-                </div>
-                
-                <!-- Container Simulado (Exibido se file://) -->
-                <div id="google-mock-container" style="display: none; width: 100%;">
-                    <button type="button" onclick="handleMockLogin()" class="btn-checkout-link" style="background-color: #4285F4; color: #ffffff; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin: 0; padding: 12px;">
-                        <svg viewBox="0 0 24 24" style="width:18px; height:18px; fill:currentColor;"><path d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.113-5.136 4.113-3.072 0-5.561-2.49-5.561-5.56s2.49-5.56 5.56-5.56c1.354 0 2.58.484 3.544 1.286l3.12-3.12c-1.996-1.86-4.57-3.003-7.224-3.003C6.732 2.545 2 7.277 2 13.087s4.732 10.54 10.54 10.54c5.783 0 10.428-4.717 10.428-10.54 0-.61-.06-1.21-.17-1.802H12.24z"/></svg>
-                        Acessar com E-mail Google
-                    </button>
-                    <span style="font-size: 0.7rem; color: var(--text-muted); margin-top: 5px; display: block;">Nota: O login real do Google exige execução via servidor local.</span>
-                </div>
-            </div>
-            
-            <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px; position: relative;">
-                <hr style="width: 100%; border: 0; border-top: 1px solid var(--border-color);">
-                <span style="position: absolute; background-color: var(--bg-off-white); padding: 0 12px; font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">OU CREDENCIAIS LOCAIS</span>
+                CONFIGURAÇÃO INICIAL: crie um usuário e uma senha local com pelo menos 8 caracteres. Estes dados permanecem somente neste navegador.
             </div>
             
             <!-- --- Login Usuário/Senha --- -->
@@ -249,10 +225,7 @@
                 <button type="submit" id="btn-login-submit" class="btn-checkout-link" style="width: 100%; padding: 12px; font-weight: 700; margin-bottom: 0;">Entrar com Usuário Local</button>
             </form>
             <p id="login-error-msg" style="color: #dc3545; font-size: 0.8rem; margin-top: 15px; display: none; font-weight: 600;">Acesso negado: Usuário incorreto ou e-mail não autorizado.</p>
-            <div style="margin-top: 25px; font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">
-                Acesso restrito para administradores da loja.<br>
-                <span style="font-weight: 600;">Usuário padrão: <code style="background: #eee; padding: 2px 6px; border-radius: 3px;">adm</code> | Senha padrão: <code style="background: #eee; padding: 2px 6px; border-radius: 3px;">nana</code></span>
-            </div>
+            <p style="margin-top: 25px; font-size: 0.75rem; color: var(--text-muted); line-height: 1.4;">Editor disponível somente neste computador para prototipação do catálogo.</p>
         </div>
     </div>
  
@@ -453,7 +426,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                         <div>
                             <h3 style="color: var(--primary-dark); font-size: 1.15rem; font-weight: 700; margin-bottom: 4px;">Gerenciamento de Acessos</h3>
-                            <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0;">Lista de e-mails autorizados do Google ou contas locais de login.</p>
+                            <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0;">Contas locais disponíveis somente neste navegador.</p>
                         </div>
                         <button type="button" class="btn-keep-shopping" onclick="openAddUserModal()" style="width: auto; padding: 8px 16px; margin: 0; background-color: var(--primary-color); color: #ffffff; display: flex; align-items: center; gap: 6px; border: none; font-size: 0.8rem;">
                             <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor;"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
@@ -576,7 +549,7 @@
                         
                         <div class="backup-card">
                             <h4>Alterar Senha do Painel</h4>
-                            <p>Modifique a senha de acesso administrativo. A senha padrão de fábrica é <code>nana</code>.</p>
+                            <p>Modifique a senha deste editor local. Use pelo menos 8 caracteres.</p>
                             <form id="change-password-form" style="margin-top: 15px;">
                                 <div class="form-group" style="margin-bottom: 10px;">
                                     <label for="pwd-current" style="font-size: 0.75rem; font-weight: 600;">Senha Atual</label>
@@ -620,20 +593,14 @@
                         <label for="user-name">Nome Completo *</label>
                         <input type="text" id="user-name" required placeholder="Ex: Ana Souza">
                     </div>
+                    <input type="hidden" id="user-type" value="credentials">
                     <div class="form-group">
-                        <label for="user-type">Tipo de Acesso *</label>
-                        <select id="user-type" required onchange="toggleUserFormFields(this.value)">
-                            <option value="google" selected>Conta Google (OAuth)</option>
-                            <option value="credentials">Usuário e Senha Locais</option>
-                        </select>
+                        <label id="user-identifier-label" for="user-identifier">Nome de Usuário / E-mail *</label>
+                        <input type="text" id="user-identifier" required placeholder="Ex: ana ou ana@email.com">
                     </div>
-                    <div class="form-group">
-                        <label id="user-identifier-label" for="user-identifier">E-mail do Google *</label>
-                        <input type="text" id="user-identifier" required placeholder="Ex: anasouza@gmail.com">
-                    </div>
-                    <div class="form-group" id="user-password-group" style="display: none;">
+                    <div class="form-group" id="user-password-group">
                         <label for="user-password">Senha Provisória *</label>
-                        <input type="password" id="user-password" placeholder="Mínimo 4 caracteres">
+                        <input type="password" id="user-password" required minlength="8" placeholder="Mínimo 8 caracteres">
                     </div>
                     <div class="form-group">
                         <label for="user-role">Nível de Permissão *</label>
@@ -652,6 +619,6 @@
     </div>
  
     <!-- --- JS Script Link --- -->
-    <script src="admin.js?v=3.1"></script>
+    <script src="admin.js?v=4.0"></script>
 </body>
 </html>
