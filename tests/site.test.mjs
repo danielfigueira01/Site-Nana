@@ -109,9 +109,10 @@ test('gerenciador de imagens exibe ordem, exclusão e imagem principal', async (
 
 test('catálogo consulta o Supabase com fallback estático', async () => {
   const [index, app] = await Promise.all([read('index.html'), read('app.js')]);
-  assert.match(index, /@supabase\/supabase-js@2\.112\.2/);
+  assert.match(index, /vendor\/supabase\.min\.js\?v=2\.112\.2/);
   assert.match(index, /supabase-config\.js\?v=1\.0/);
   assert.match(app, /window\.nanaSupabase[\s\S]*?\.from\('products'\)/);
+  assert.match(app, /categories!products_category_id_fkey/);
   assert.match(app, /function getFactoryProducts/);
   assert.match(app, /await loadProducts\(\)/);
 });
