@@ -86,3 +86,15 @@ test('banner principal otimizado permanece leve', async () => {
   const banner = await stat(path.join(root, 'banner_generico.webp'));
   assert.ok(banner.size < 250_000, `banner com ${banner.size} bytes`);
 });
+
+test('gerenciador de imagens exibe ordem, exclusão e imagem principal', async () => {
+  const [adminHtml, adminJs] = await Promise.all([read('admin.html'), read('admin.js')]);
+  assert.match(adminHtml, /grid-template-rows:\s*minmax\(0, 1fr\) 40px/);
+  assert.match(adminHtml, /\.image-primary-badge/);
+  assert.match(adminHtml, /admin\.js\?v=4\.1/);
+  assert.match(adminJs, /Principal/);
+  assert.match(adminJs, /aria-label="Mover imagem \$\{idx \+ 1\} para a esquerda"/);
+  assert.match(adminJs, /aria-label="Mover imagem \$\{idx \+ 1\} para a direita"/);
+  assert.match(adminJs, /aria-label="Excluir imagem \$\{idx \+ 1\}"/);
+  assert.match(adminJs, /tempImages\[targetIdx\] = temp/);
+});
