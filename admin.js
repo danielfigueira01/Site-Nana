@@ -4120,6 +4120,11 @@ function resetToFactorySettings() {
 
 // --- Inicialização da Aplicação Admin ---
 document.addEventListener('DOMContentLoaded', () => {
+    if (window.nanaSupabase && typeof initializeSupabaseAdmin === 'function') {
+        initializeSupabaseAdmin();
+        return;
+    }
+
     const isLocalAdminEnvironment = window.location.protocol === 'file:' || ['localhost', '127.0.0.1'].includes(window.location.hostname);
     if (!isLocalAdminEnvironment) {
         document.body.innerHTML = `

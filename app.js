@@ -3290,89 +3290,58 @@ function formatProductName(name) {
     }
 }
 
-// --- Carregar e Salvar Produtos no LocalStorage ---
-function loadProducts() {
+// --- Catálogo compartilhado no Supabase, com fallback estático ---
+function getFactoryProducts() {
+    return PRODUCTS_DATA.map(product => {
+        const copy = { ...product };
+        copy.images = Array.isArray(copy.images) ? copy.images.slice(0, 5) : (copy.imageUrl ? [copy.imageUrl] : []);
+        copy.sizes = Array.isArray(copy.sizes) ? copy.sizes : (parseSizesFromDescription(copy.description) || ['P', 'M', 'G', 'GG']);
+        if (copy.category === 'infantil' && !copy.sizes.includes('PP')) copy.sizes.unshift('PP');
+        copy.name = formatProductName(copy.name);
+        return copy;
+    });
+}
+
+function mapSupabaseProduct(row) {
+    const category = Array.isArray(row.categories) ? row.categories[0] : row.categories;
+    return {
+        id: Number(row.legacy_id),
+        dbId: row.id,
+        name: formatProductName(row.name),
+        slug: row.slug,
+        price: Number(row.price),
+        category: category?.slug || 'outros',
+        categoryName: category?.name || 'Outros',
+        imageUrl: row.image_url,
+        images: Array.isArray(row.image_urls) ? row.image_urls.slice(0, 5) : [row.image_url],
+        sizes: Array.isArray(row.sizes) && row.sizes.length ? row.sizes : ['P', 'M', 'G', 'GG'],
+        description: row.description || '',
+        highlight: !!row.featured,
+        active: row.active !== false,
+        sortOrder: Number(row.sort_order || 0)
+    };
+}
+
+async function loadProducts() {
+    if (!window.nanaSupabase) {
+        products = getFactoryProducts();
+        return;
+    }
+
     try {
-        const storedProducts = localStorage.getItem('nana_products_v9');
-        if (storedProducts) {
-            products = JSON.parse(storedProducts);
-            // Garantir lista de imagens, tamanhos e nomes formatados
-            let updated = false;
-            products.forEach(p => {
-                // Se o produto no localStorage tiver apenas imagens da fábrica e a quantidade for menor do que a da fábrica, restaura
-                const factoryProd = PRODUCTS_DATA.find(fp => fp.id === p.id || (fp.slug && fp.slug === p.slug));
-                if (factoryProd && factoryProd.images && factoryProd.images.length > 1) {
-                    const onlyFactory = !p.images || p.images.every(img => typeof img === 'string' && img.startsWith('imagens-produtos-nana-4x5-cortadas/'));
-                    if (onlyFactory && (!p.images || p.images.length < factoryProd.images.length)) {
-                        p.images = [...factoryProd.images];
-                        updated = true;
-                    }
-                }
-                
-                if (!p.images || !Array.isArray(p.images)) {
-                    p.images = p.imageUrl ? [p.imageUrl] : [];
-                    updated = true;
-                }
-                
-                // Limitar a no máximo 5 imagens
-                if (p.images.length > 5) {
-                    p.images = p.images.slice(0, 5);
-                    updated = true;
-                }
+        const { data, error } = await window.nanaSupabase
+            .from('products')
+            .select('id,legacy_id,name,slug,price,description,image_url,image_urls,sizes,featured,active,sort_order,categories(name,slug)')
+            .eq('active', true)
+            .order('sort_order', { ascending: true })
+            .order('legacy_id', { ascending: true });
 
-                // Inicializar tamanhos a partir da descrição para compatibilidade retrógrada
-                if (p.sizes === undefined || p.sizes === null) {
-                    p.sizes = parseSizesFromDescription(p.description) || ['P', 'M', 'G', 'GG'];
-                    updated = true;
-                }
-
-                // Formatar nome do produto para manter o padrão desejado
-                const formattedName = formatProductName(p.name);
-                if (p.name !== formattedName) {
-                    p.name = formattedName;
-                    updated = true;
-                }
-            });
-            if (updated) {
-                localStorage.setItem('nana_products_v9', JSON.stringify(products));
-            }
-        } else {
-            products = PRODUCTS_DATA.map(p => {
-                const copy = { ...p };
-                if (copy.images && Array.isArray(copy.images)) {
-                    copy.images = copy.images.slice(0, 5);
-                } else {
-                    copy.images = copy.imageUrl ? [copy.imageUrl] : [];
-                }
-                if (copy.sizes === undefined || copy.sizes === null) {
-                    copy.sizes = parseSizesFromDescription(copy.description) || ['P', 'M', 'G', 'GG'];
-                }
-                if (copy.category === 'infantil' && (!copy.sizes.includes('PP') && !copy.sizes.includes('pp'))) {
-                    copy.sizes.unshift('PP');
-                }
-                copy.name = formatProductName(copy.name);
-                return copy;
-            });
-            localStorage.setItem('nana_products_v9', JSON.stringify(products));
-        }
-    } catch (e) {
-        console.error("Erro ao ler produtos do localStorage:", e);
-        products = PRODUCTS_DATA.map(p => {
-            const copy = { ...p };
-            if (copy.images && Array.isArray(copy.images)) {
-                copy.images = copy.images.slice(0, 5);
-            } else {
-                copy.images = copy.imageUrl ? [copy.imageUrl] : [];
-            }
-            if (copy.sizes === undefined || copy.sizes === null) {
-                copy.sizes = parseSizesFromDescription(copy.description) || ['P', 'M', 'G', 'GG'];
-            }
-            if (copy.category === 'infantil' && (!copy.sizes.includes('PP') && !copy.sizes.includes('pp'))) {
-                copy.sizes.unshift('PP');
-            }
-            copy.name = formatProductName(copy.name);
-            return copy;
-        });
+        if (error) throw error;
+        products = data.map(mapSupabaseProduct).filter(product => Number.isFinite(product.id));
+        if (products.length === 0) throw new Error('O catálogo online retornou vazio.');
+    } catch (error) {
+        console.error('Falha ao carregar o catálogo online:', error);
+        products = getFactoryProducts();
     }
 }
 
@@ -3705,7 +3674,6 @@ function closeCartDrawer() {
 
 // --- Detalhes do Produto Modal (Revisto com estilo clean) ---
 function openProductModal(productId) {
-    loadProducts(); // Sincroniza com as alterações do painel gerencial
     const product = products.find(p => p.id === productId);
     if (!product) return;
     
@@ -3999,30 +3967,24 @@ function initFilters() {
 }
 
 // --- Inicialização ---
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initAccessibleLayers();
-    ImageStore.init().then(() => {
-        return ImageStore.getAll();
-    }).then((storedImages) => {
+    try {
+        await ImageStore.init();
+        const storedImages = await ImageStore.getAll();
         storedImages.forEach(img => {
             localImagesMap[img.id] = img.dataUrl;
         });
-        
-        loadProducts();
-        loadBanners();
-        initSlider();
-        loadCart();
-        initFilters();
-        renderProductsGrid();
-    }).catch(err => {
-        console.error("Falha ao inicializar banco de imagens:", err);
-        loadProducts();
-        loadBanners();
-        initSlider();
-        loadCart();
-        initFilters();
-        renderProductsGrid();
-    });
+    } catch (error) {
+        console.error('Falha ao inicializar o cache de imagens:', error);
+    }
+
+    await loadProducts();
+    loadBanners();
+    initSlider();
+    loadCart();
+    initFilters();
+    renderProductsGrid();
     
     if (DOM.checkoutForm) {
         DOM.checkoutForm.addEventListener('submit', submitCheckout);

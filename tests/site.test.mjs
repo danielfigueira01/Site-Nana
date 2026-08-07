@@ -12,7 +12,7 @@ test('páginas essenciais e SEO estão presentes', async () => {
   assert.match(index, /<h1\b/i);
   assert.match(index, /rel="canonical"/i);
   assert.match(index, /application\/ld\+json/i);
-  assert.doesNotMatch(index, /href="admin\.html"/i);
+  assert.match(index, /href="admin\.html"/i);
   await Promise.all([
     access(path.join(root, 'termos-de-uso.html')),
     access(path.join(root, 'politica-de-privacidade.html')),
@@ -67,19 +67,27 @@ test('menu mobile começa pela primeira categoria', async () => {
   assert.match(app, /if \(!cat\) return;/);
 });
 
-test('modais têm semântica e o painel público está bloqueado', async () => {
-  const [index, adminHtml, adminJs] = await Promise.all([
+test('modais têm semântica e o painel online exige autenticação administrativa', async () => {
+  const [index, adminHtml, adminJs, onlineAdmin, config] = await Promise.all([
     read('index.html'),
     read('admin.html'),
-    read('admin.js')
+    read('admin.js'),
+    read('admin-supabase.js'),
+    read('supabase-config.js')
   ]);
   assert.equal((index.match(/role="dialog"/g) ?? []).length, 4);
   assert.match(index, /aria-modal="true"/);
   assert.match(adminHtml, /noindex, nofollow/);
-  assert.match(adminJs, /isLocalAdminEnvironment/);
+  assert.match(adminJs, /initializeSupabaseAdmin/);
   assert.doesNotMatch(adminHtml, /Usuário padrão|Senha padrão/);
   assert.doesNotMatch(adminJs, /placeholder\.apps\.googleusercontent\.com/);
-  assert.match(adminJs, /users\.find\(user => user\.id === parsedSession\.id\)/);
+  assert.match(onlineAdmin, /signInWithPassword/);
+  assert.match(onlineAdmin, /signUp/);
+  assert.match(onlineAdmin, /rpc\('is_catalog_admin'\)/);
+  assert.match(onlineAdmin, /from\('products'\)/);
+  assert.match(onlineAdmin, /\.from\(PRODUCT_BUCKET\)[\s\S]*?\.upload/);
+  assert.match(config, /sb_publishable_/);
+  assert.doesNotMatch(`${onlineAdmin}\n${config}`, /service_role|sb_secret_/i);
 });
 
 test('banner principal otimizado permanece leve', async () => {
@@ -91,10 +99,19 @@ test('gerenciador de imagens exibe ordem, exclusão e imagem principal', async (
   const [adminHtml, adminJs] = await Promise.all([read('admin.html'), read('admin.js')]);
   assert.match(adminHtml, /grid-template-rows:\s*minmax\(0, 1fr\) 40px/);
   assert.match(adminHtml, /\.image-primary-badge/);
-  assert.match(adminHtml, /admin\.js\?v=4\.1/);
+  assert.match(adminHtml, /admin\.js\?v=5\.0/);
   assert.match(adminJs, /Principal/);
   assert.match(adminJs, /aria-label="Mover imagem \$\{idx \+ 1\} para a esquerda"/);
   assert.match(adminJs, /aria-label="Mover imagem \$\{idx \+ 1\} para a direita"/);
   assert.match(adminJs, /aria-label="Excluir imagem \$\{idx \+ 1\}"/);
   assert.match(adminJs, /tempImages\[targetIdx\] = temp/);
+});
+
+test('catálogo consulta o Supabase com fallback estático', async () => {
+  const [index, app] = await Promise.all([read('index.html'), read('app.js')]);
+  assert.match(index, /@supabase\/supabase-js@2\.112\.2/);
+  assert.match(index, /supabase-config\.js\?v=1\.0/);
+  assert.match(app, /window\.nanaSupabase[\s\S]*?\.from\('products'\)/);
+  assert.match(app, /function getFactoryProducts/);
+  assert.match(app, /await loadProducts\(\)/);
 });
