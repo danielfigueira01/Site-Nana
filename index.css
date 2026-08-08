@@ -5,8 +5,6 @@
 */
 
 /* --- Google Fonts --- */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
 /* --- Custom Properties / CSS Variables --- */
 :root {
     /* Paleta Rosé & Marrom Suave */
@@ -21,12 +19,12 @@
     --primary-color: #6B4A45;    /* Marrom suave para textos e destaques */
     --primary-dark: #4E342E;     /* Marrom escuro para títulos principais */
     --text-color: #6B4A45;       /* Texto padrão */
-    --text-muted: #8A7A76;       /* Cinza quente para textos secundários */
+    --text-muted: #75645F;       /* Cinza quente com contraste acessível */
     --border-color: #E9DEDA;     /* Bordas muito suaves */
     
     /* Cores de Destaque / Botões */
-    --accent-color: #B97C78;     /* Rosa queimado ativo */
-    --accent-hover: #A96C68;     /* Hover do rosa queimado */
+    --accent-color: #9D5F5C;     /* Rosa queimado com contraste acessível */
+    --accent-hover: #8F504D;     /* Hover do rosa queimado */
     
     --font-family: 'Inter', sans-serif;
     
@@ -701,6 +699,50 @@ header {
     gap: 25px;
 }
 
+.products-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 0 0;
+}
+
+.products-pagination[hidden] {
+    display: none;
+}
+
+.pagination-btn {
+    min-height: 42px;
+    min-width: 42px;
+    padding: 8px 13px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    background: var(--bg-off-white);
+    color: var(--primary-dark);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.pagination-btn:hover:not(:disabled),
+.pagination-btn.active {
+    color: #fff;
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.pagination-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
+.pagination-status {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0 6px;
+}
+
 .no-products {
     background-color: var(--bg-off-white);
     border-radius: var(--border-radius-md);
@@ -796,7 +838,7 @@ header {
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
-    color: var(--rose-dark);
+    color: var(--accent-color);
     margin-bottom: 6px;
     letter-spacing: 0.5px;
 }
@@ -1981,6 +2023,12 @@ footer {
         flex-direction: column;
         align-items: flex-start;
         gap: 10px;
+    }
+
+    .pagination-status {
+        width: 100%;
+        order: -1;
+        text-align: center;
     }
 }
 
