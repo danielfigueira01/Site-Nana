@@ -2959,6 +2959,8 @@ let searchQuery = '';
 let minPriceFilter = 0;
 let maxPriceFilter = 60;
 let sortBy = 'default';
+const PRODUCTS_PER_PAGE = 24;
+let currentCatalogPage = 1;
 let selectedSize = 'M';
 let currentProductInModal = null;
 let currentSlideIndex = 0;
@@ -2969,6 +2971,7 @@ let lastFocusedElement = null;
 const DOM = {
     get productsGrid() { return document.getElementById('products-grid'); },
     get productsCount() { return document.getElementById('products-count'); },
+    get productsPagination() { return document.getElementById('products-pagination'); },
     get cartBadge() { return document.getElementById('cart-badge'); },
     get cartBadgeHeader() { return document.getElementById('cart-badge-header'); },
     get cartOverlay() { return document.getElementById('cart-overlay'); },
@@ -3062,6 +3065,9 @@ function getProductImageSrc(url) {
     }
 
     if (/^[a-z0-9À-ÿ_./%()\-]+$/i.test(resolvedUrl) && !resolvedUrl.includes('..')) {
+        if (/^imagens-produtos-nana-4x5-cortadas\/.+\.(?:jpe?g|png)$/i.test(resolvedUrl)) {
+            return resolvedUrl.replace(/\.(?:jpe?g|png)$/i, '.webp');
+        }
         return resolvedUrl;
     }
 
@@ -3292,14 +3298,50 @@ function formatProductName(name) {
 
 // --- Catálogo compartilhado no Supabase, com fallback estático ---
 function getFactoryProducts() {
-    return PRODUCTS_DATA.map(product => {
+    return disambiguateProductNames(PRODUCTS_DATA.map(product => {
         const copy = { ...product };
         copy.images = Array.isArray(copy.images) ? copy.images.slice(0, 5) : (copy.imageUrl ? [copy.imageUrl] : []);
         copy.sizes = Array.isArray(copy.sizes) ? copy.sizes : (parseSizesFromDescription(copy.description) || ['P', 'M', 'G', 'GG']);
         if (copy.category === 'infantil' && !copy.sizes.includes('PP')) copy.sizes.unshift('PP');
         copy.name = formatProductName(copy.name);
         return copy;
+    }));
+}
+
+function getVariantCode(product) {
+    const slugMatch = String(product.slug || '').match(/-(\d{3,})$/);
+    if (slugMatch) return slugMatch[1];
+    const imageMatch = String(product.imageUrl || '').match(/-(\d{3,})-\d{2}-4x5\.(?:jpe?g|png|webp)$/i);
+    return imageMatch ? imageMatch[1] : '';
+}
+
+function disambiguateProductNames(list) {
+    const groups = new Map();
+    list.forEach(product => {
+        const key = String(product.name || '')
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim()
+            .toLocaleLowerCase('pt-BR');
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(product);
     });
+
+    groups.forEach(group => {
+        if (group.length < 2) return;
+        const usedLabels = new Set();
+        group.forEach((product, index) => {
+            const sku = String(product.sku || '').trim();
+            const skuIsUnique = sku && group.filter(item => String(item.sku || '').trim() === sku).length === 1;
+            const variantCode = getVariantCode(product);
+            let label = skuIsUnique ? `Ref. ${sku}` : (variantCode ? `Variação ${variantCode}` : `Opção ${index + 1}`);
+            if (usedLabels.has(label)) label = `${label}-${index + 1}`;
+            usedLabels.add(label);
+            product.name = `${product.name} · ${label}`;
+        });
+    });
+
+    return list;
 }
 
 function mapSupabaseProduct(row) {
@@ -3309,6 +3351,7 @@ function mapSupabaseProduct(row) {
         dbId: row.id,
         name: formatProductName(row.name),
         slug: row.slug,
+        sku: row.sku,
         price: Number(row.price),
         category: category?.slug || 'outros',
         categoryName: category?.name || 'Outros',
@@ -3331,13 +3374,13 @@ async function loadProducts() {
     try {
         const { data, error } = await window.nanaSupabase
             .from('products')
-            .select('id,legacy_id,name,slug,price,description,image_url,image_urls,sizes,featured,active,sort_order,categories!products_category_id_fkey(name,slug)')
+            .select('id,legacy_id,name,slug,sku,price,description,image_url,image_urls,sizes,featured,active,sort_order,categories!products_category_id_fkey(name,slug)')
             .eq('active', true)
             .order('sort_order', { ascending: true })
             .order('legacy_id', { ascending: true });
 
         if (error) throw error;
-        products = data.map(mapSupabaseProduct).filter(product => Number.isFinite(product.id));
+        products = disambiguateProductNames(data.map(mapSupabaseProduct).filter(product => Number.isFinite(product.id)));
         if (products.length === 0) throw new Error('O catálogo online retornou vazio.');
     } catch (error) {
         console.error('Falha ao carregar o catálogo online:', error);
@@ -3444,6 +3487,38 @@ function scrollToProducts() {
 }
 
 // --- Renderização de Produtos (Grid) ---
+function renderProductsPagination(totalProducts, totalPages, isHomePage) {
+    if (!DOM.productsPagination) return;
+    if (isHomePage || totalPages <= 1) {
+        DOM.productsPagination.hidden = true;
+        DOM.productsPagination.innerHTML = '';
+        return;
+    }
+
+    DOM.productsPagination.hidden = false;
+    const pages = [];
+    const start = Math.max(1, currentCatalogPage - 2);
+    const end = Math.min(totalPages, currentCatalogPage + 2);
+    for (let page = start; page <= end; page += 1) pages.push(page);
+
+    DOM.productsPagination.innerHTML = `
+        <button type="button" class="pagination-btn" data-page="${currentCatalogPage - 1}" ${currentCatalogPage === 1 ? 'disabled' : ''} aria-label="Página anterior">Anterior</button>
+        <span class="pagination-status" aria-live="polite">Página ${currentCatalogPage} de ${totalPages} · ${totalProducts} produtos</span>
+        ${pages.map(page => `<button type="button" class="pagination-btn ${page === currentCatalogPage ? 'active' : ''}" data-page="${page}" aria-label="Ir para a página ${page}" aria-current="${page === currentCatalogPage ? 'page' : 'false'}">${page}</button>`).join('')}
+        <button type="button" class="pagination-btn" data-page="${currentCatalogPage + 1}" ${currentCatalogPage === totalPages ? 'disabled' : ''} aria-label="Próxima página">Próxima</button>
+    `;
+
+    DOM.productsPagination.querySelectorAll('.pagination-btn:not([disabled])').forEach(button => {
+        button.addEventListener('click', () => {
+            const requestedPage = Number(button.dataset.page);
+            if (!Number.isInteger(requestedPage) || requestedPage < 1 || requestedPage > totalPages) return;
+            currentCatalogPage = requestedPage;
+            renderProductsGrid();
+            document.getElementById('catalog-title')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+    });
+}
+
 function renderProductsGrid() {
     if (!DOM.productsGrid) return;
     
@@ -3485,8 +3560,17 @@ function renderProductsGrid() {
     } else if (sortBy === 'name-asc') {
         filteredProducts.sort((a, b) => a.name.localeCompare(b.name));
     }
-    
-    DOM.productsCount.textContent = `${filteredProducts.length} ${filteredProducts.length === 1 ? 'peça encontrada' : 'peças encontradas'}`;
+
+    const totalProducts = filteredProducts.length;
+    const totalPages = isHomePage ? 1 : Math.max(1, Math.ceil(totalProducts / PRODUCTS_PER_PAGE));
+    currentCatalogPage = Math.min(currentCatalogPage, totalPages);
+    if (!isHomePage) {
+        const pageStart = (currentCatalogPage - 1) * PRODUCTS_PER_PAGE;
+        filteredProducts = filteredProducts.slice(pageStart, pageStart + PRODUCTS_PER_PAGE);
+    }
+
+    DOM.productsCount.textContent = `${totalProducts} ${totalProducts === 1 ? 'peça encontrada' : 'peças encontradas'}`;
+    renderProductsPagination(totalProducts, totalPages, isHomePage);
     
     if (filteredProducts.length === 0) {
         DOM.productsGrid.innerHTML = `
@@ -3502,7 +3586,7 @@ function renderProductsGrid() {
     }
     
     // Render Grid. Selos comerciais só aparecem quando cadastrados explicitamente.
-    DOM.productsGrid.innerHTML = filteredProducts.map((prod) => {
+    DOM.productsGrid.innerHTML = filteredProducts.map((prod, index) => {
         const badgeText = typeof prod.badge === 'string' ? prod.badge.trim() : '';
         const badgeHtml = badgeText ? `<span class="product-badge">${escapeHtml(badgeText)}</span>` : '';
         const productName = escapeHtml(prod.name);
@@ -3512,7 +3596,7 @@ function renderProductsGrid() {
             <article class="product-card">
                 <button type="button" class="product-img-wrapper product-open-btn" onclick="openProductModal(${Number(prod.id)})" aria-label="Ver detalhes de ${escapeAttribute(prod.name)}">
                     ${badgeHtml}
-                    <img class="product-img" src="${imageSrc}" alt="${escapeAttribute(prod.name)}" onerror="this.src='logo.jpg'" loading="lazy" decoding="async">
+                    <img class="product-img" src="${imageSrc}" alt="${escapeAttribute(prod.name)}" onerror="this.src='logo.jpg'" loading="${index < 4 ? 'eager' : 'lazy'}" fetchpriority="${index === 0 ? 'high' : 'auto'}" decoding="async">
                 </button>
                 <div class="product-info">
                     <span class="product-category">${escapeHtml(prod.categoryName)}</span>
@@ -3882,6 +3966,7 @@ function submitCheckout(event) {
 // --- Filtros & Navegação ---
 function setCategory(categorySlug, event) {
     activeCategory = categorySlug;
+    currentCatalogPage = 1;
     
     DOM.filterItems.forEach(item => {
         const input = item.querySelector('input');
@@ -3932,6 +4017,7 @@ function initFilters() {
         DOM.priceSlider.addEventListener('input', (e) => {
             maxPriceFilter = parseFloat(e.target.value);
             DOM.priceValMax.value = maxPriceFilter;
+            currentCatalogPage = 1;
             renderProductsGrid();
         });
     }
@@ -3939,6 +4025,7 @@ function initFilters() {
     if (DOM.priceValMin) {
         DOM.priceValMin.addEventListener('change', (e) => {
             minPriceFilter = parseFloat(e.target.value) || 0;
+            currentCatalogPage = 1;
             renderProductsGrid();
         });
     }
@@ -3947,6 +4034,7 @@ function initFilters() {
         DOM.priceValMax.addEventListener('change', (e) => {
             maxPriceFilter = parseFloat(e.target.value) || 60;
             if (DOM.priceSlider) DOM.priceSlider.value = maxPriceFilter;
+            currentCatalogPage = 1;
             renderProductsGrid();
         });
     }
@@ -3954,6 +4042,7 @@ function initFilters() {
     if (DOM.searchInput) {
         DOM.searchInput.addEventListener('input', (e) => {
             searchQuery = e.target.value;
+            currentCatalogPage = 1;
             renderProductsGrid();
         });
     }
@@ -3961,6 +4050,7 @@ function initFilters() {
     if (DOM.sortSelect) {
         DOM.sortSelect.addEventListener('change', (e) => {
             sortBy = e.target.value;
+            currentCatalogPage = 1;
             renderProductsGrid();
         });
     }

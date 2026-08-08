@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://ofarjltaoohnfyxbnuxx.supabase.co; form-action 'self'; upgrade-insecure-requests">
     
     <!-- SEO Meta Tags -->
     <title>Nana Moda Íntima - Conforto e Praticidade</title>
@@ -27,9 +29,10 @@
     
     <!-- Favicon -->
     <link rel="icon" href="logo.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="banner_generico.webp" fetchpriority="high">
     
     <!-- CSS Link -->
-    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="index.min.css?v=5.2">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -138,7 +141,7 @@
         <aside class="sidebar-filters">
             <!-- Category Filter -->
             <div class="filter-group">
-                <h3 class="filter-group-title">Categorias</h3>
+                <h2 class="filter-group-title">Categorias</h2>
                 <div class="filter-list">
                     <label class="filter-item active" id="filter-cat-all">
                         <input type="radio" name="category-filter" value="all" checked>
@@ -181,9 +184,9 @@
             
             <!-- Price Filter -->
             <div class="filter-group">
-                <h3 class="filter-group-title">Faixa de Preço</h3>
+                <h2 class="filter-group-title">Faixa de Preço</h2>
                 <div class="price-range-container">
-                    <input type="range" class="price-slider" id="price-slider" min="0" max="60" value="60">
+                    <input type="range" class="price-slider" id="price-slider" min="0" max="60" value="60" aria-label="Preço máximo">
                     <div class="price-inputs">
                         <div class="price-input-box">
                             <label for="price-val-min">De</label>
@@ -221,6 +224,7 @@
             <div class="products-grid" id="products-grid">
                 <!-- Renderizado dinamicamente via JS -->
             </div>
+            <nav class="products-pagination" id="products-pagination" aria-label="Páginas do catálogo" hidden></nav>
         </section>
     </main>
 
@@ -484,6 +488,6 @@
     <!-- Catálogo online e aplicação -->
     <script src="vendor/supabase.min.js?v=2.112.2"></script>
     <script src="supabase-config.js?v=1.0"></script>
-    <script src="app.js?v=5.1"></script>
+    <script src="app.min.js?v=5.2"></script>
 </body>
 </html>

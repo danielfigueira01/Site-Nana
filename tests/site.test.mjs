@@ -85,6 +85,7 @@ test('modais têm semântica e o painel online exige autenticação administrati
   assert.match(onlineAdmin, /resetPasswordForEmail/);
   assert.match(onlineAdmin, /PASSWORD_RECOVERY/);
   assert.match(onlineAdmin, /updateUser\(\{ password \}\)/);
+  assert.match(onlineAdmin, /password\.length >= 10/);
   assert.match(adminHtml, /Esqueci minha senha/);
   assert.doesNotMatch(adminHtml, /Criar primeiro acesso/);
   assert.match(onlineAdmin, /danielfigueira01@gmail\.com/);
@@ -105,7 +106,8 @@ test('gerenciador de imagens exibe ordem, exclusão e imagem principal', async (
   const [adminHtml, adminJs] = await Promise.all([read('admin.html'), read('admin.js')]);
   assert.match(adminHtml, /grid-template-rows:\s*minmax\(0, 1fr\) 40px/);
   assert.match(adminHtml, /\.image-primary-badge/);
-  assert.match(adminHtml, /admin\.js\?v=5\.0/);
+  assert.match(adminHtml, /admin\.min\.js\?v=5\.1/);
+  assert.match(adminHtml, /admin-supabase\.min\.js\?v=1\.4/);
   assert.match(adminJs, /Principal/);
   assert.match(adminJs, /aria-label="Mover imagem \$\{idx \+ 1\} para a esquerda"/);
   assert.match(adminJs, /aria-label="Mover imagem \$\{idx \+ 1\} para a direita"/);
@@ -121,4 +123,39 @@ test('catálogo consulta o Supabase com fallback estático', async () => {
   assert.match(app, /categories!products_category_id_fkey/);
   assert.match(app, /function getFactoryProducts/);
   assert.match(app, /await loadProducts\(\)/);
+});
+
+test('catálogo usa paginação e limita a quantidade de cards por página', async () => {
+  const [index, app] = await Promise.all([read('index.html'), read('app.js')]);
+  assert.match(index, /id="products-pagination"/);
+  assert.match(app, /const PRODUCTS_PER_PAGE = 24/);
+  assert.match(app, /filteredProducts\.slice\(pageStart, pageStart \+ PRODUCTS_PER_PAGE\)/);
+  assert.match(app, /Página \$\{currentCatalogPage\} de \$\{totalPages\}/);
+});
+
+test('imagens do catálogo usam WebP otimizado com originais preservados', async () => {
+  const app = await read('app.js');
+  assert.match(app, /imagens-produtos-nana-4x5-cortadas/);
+  assert.match(app, /return resolvedUrl\.replace\([^\n]+\.webp/);
+  const sourceDir = path.join(root, 'imagens-produtos-nana-4x5-cortadas');
+  const sampleWebp = path.join(sourceDir, '7014-camisola-regata-suede-ref-7014-camisola-regata-suede-01-4x5.webp');
+  const sampleJpg = path.join(sourceDir, '7014-camisola-regata-suede-ref-7014-camisola-regata-suede-01-4x5.jpg');
+  await Promise.all([access(sampleWebp), access(sampleJpg)]);
+  assert.ok((await stat(sampleWebp)).size < (await stat(sampleJpg)).size);
+});
+
+test('acessibilidade e proteção básica permanecem ativas', async () => {
+  const [index, css] = await Promise.all([read('index.html'), read('index.css')]);
+  assert.match(index, /aria-label="Preço máximo"/);
+  assert.match(index, /Content-Security-Policy/);
+  assert.match(index, /strict-origin-when-cross-origin/);
+  assert.match(css, /--text-muted:\s*#75645F/i);
+  assert.match(css, /--accent-color:\s*#9D5F5C/i);
+});
+
+test('nomes repetidos recebem identificação de variação sem excluir produtos', async () => {
+  const app = await read('app.js');
+  assert.match(app, /function disambiguateProductNames/);
+  assert.match(app, /Variação \$\{variantCode\}/);
+  assert.match(app, /products = disambiguateProductNames/);
 });

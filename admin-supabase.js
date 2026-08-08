@@ -38,7 +38,7 @@
         if (resetButton) resetButton.style.display = 'none';
         if (DOMAdmin.loginWelcomeMsg) DOMAdmin.loginWelcomeMsg.textContent = 'Digite e salve sua nova senha.';
         if (DOMAdmin.adminSetupMsg) {
-            DOMAdmin.adminSetupMsg.textContent = 'NOVA SENHA: use pelo menos 8 caracteres e não compartilhe a senha com ninguém.';
+            DOMAdmin.adminSetupMsg.textContent = 'NOVA SENHA: use pelo menos 10 caracteres, com letra maiúscula, minúscula, número e símbolo.';
             DOMAdmin.adminSetupMsg.style.display = 'block';
         }
         if (DOMAdmin.loginPassword) {
@@ -137,8 +137,9 @@
         const email = DOMAdmin.loginUsername.value.trim().toLowerCase();
         const password = DOMAdmin.loginPassword.value;
         if (passwordRecoveryMode) {
-            if (password.length < 8) {
-                showLoginFeedback('A nova senha precisa ter pelo menos 8 caracteres.');
+            const hasStrongPassword = password.length >= 10 && /[a-z]/.test(password) && /[A-Z]/.test(password) && /\d/.test(password) && /[^A-Za-z0-9]/.test(password);
+            if (!hasStrongPassword) {
+                showLoginFeedback('Use pelo menos 10 caracteres, com letra maiúscula, minúscula, número e símbolo.');
                 return;
             }
             setLoginBusy(true);
@@ -187,7 +188,10 @@
             if (error) throw error;
             showLoginFeedback('Enviamos um link para criar uma nova senha. Confira também a pasta de spam.', false);
         } catch (error) {
-            showLoginFeedback('Não foi possível enviar o link agora. Aguarde alguns minutos e tente novamente.');
+            const isEmailRateLimit = error?.code === 'over_email_send_rate_limit' || error?.status === 429;
+            showLoginFeedback(isEmailRateLimit
+                ? 'O limite temporário de e-mails foi atingido. Aguarde cerca de 1 hora e clique somente uma vez.'
+                : 'Não foi possível enviar o link agora. Aguarde alguns minutos e tente novamente.');
             console.error('Falha ao solicitar recuperação de senha:', error);
         } finally {
             setLoginBusy(false);
