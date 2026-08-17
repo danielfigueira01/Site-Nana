@@ -211,11 +211,29 @@
             .replace(/(^-|-$)/g, '');
     }
 
+    function dataUrlToBlob(dataUrl) {
+        const match = /^data:([^;,]+);base64,(.+)$/s.exec(String(dataUrl || ''));
+        if (!match) throw new Error('A imagem selecionada está em um formato inválido. Selecione o arquivo novamente.');
+
+        const mimeType = match[1];
+        let binary;
+        try {
+            binary = window.atob(match[2]);
+        } catch {
+            throw new Error('Não foi possível ler a imagem selecionada. Selecione o arquivo novamente.');
+        }
+
+        const bytes = new Uint8Array(binary.length);
+        for (let index = 0; index < binary.length; index += 1) {
+            bytes[index] = binary.charCodeAt(index);
+        }
+        return new Blob([bytes], { type: mimeType });
+    }
+
     async function uploadLocalProductImage(imageId) {
         const dataUrl = localImagesMap[imageId];
         if (!dataUrl) throw new Error('Imagem local não encontrada. Selecione o arquivo novamente.');
-        const response = await fetch(dataUrl);
-        const blob = await response.blob();
+        const blob = dataUrlToBlob(dataUrl);
         if (blob.size > 5 * 1024 * 1024) throw new Error('Cada imagem deve ter no máximo 5 MB.');
         const extensionByType = {
             'image/jpeg': 'jpg',

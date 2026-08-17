@@ -3,6 +3,7 @@ import { access, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { runInNewContext } from 'node:vm';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (file) => readFile(path.join(root, file), 'utf8');
@@ -93,8 +94,27 @@ test('modais têm semântica e o painel online exige autenticação administrati
   assert.match(onlineAdmin, /rpc\('is_catalog_admin'\)/);
   assert.match(onlineAdmin, /from\('products'\)/);
   assert.match(onlineAdmin, /\.from\(PRODUCT_BUCKET\)[\s\S]*?\.upload/);
+  assert.match(onlineAdmin, /function dataUrlToBlob/);
+  assert.match(onlineAdmin, /window\.atob/);
+  assert.doesNotMatch(onlineAdmin, /fetch\(dataUrl\)/);
   assert.match(config, /sb_publishable_/);
   assert.doesNotMatch(`${onlineAdmin}\n${config}`, /service_role|sb_secret_/i);
+});
+
+test('imagem local é convertida sem requisição bloqueada pela política de segurança', async () => {
+  const onlineAdmin = await read('admin-supabase.js');
+  const helper = onlineAdmin.match(/function dataUrlToBlob[\s\S]*?(?=\n    async function uploadLocalProductImage)/)?.[0];
+  assert.ok(helper, 'função de conversão da imagem não encontrada');
+
+  const blob = runInNewContext(`(${helper})('data:image/png;base64,AQID')`, {
+    Blob,
+    Uint8Array,
+    window: { atob }
+  });
+
+  assert.equal(blob.type, 'image/png');
+  assert.equal(blob.size, 3);
+  assert.deepEqual([...new Uint8Array(await blob.arrayBuffer())], [1, 2, 3]);
 });
 
 test('banner principal otimizado permanece leve', async () => {
@@ -107,7 +127,7 @@ test('gerenciador de imagens exibe ordem, exclusão e imagem principal', async (
   assert.match(adminHtml, /grid-template-rows:\s*minmax\(0, 1fr\) 40px/);
   assert.match(adminHtml, /\.image-primary-badge/);
   assert.match(adminHtml, /admin\.min\.js\?v=5\.1/);
-  assert.match(adminHtml, /admin-supabase\.min\.js\?v=1\.4/);
+  assert.match(adminHtml, /admin-supabase\.min\.js\?v=1\.5/);
   assert.match(adminJs, /Principal/);
   assert.match(adminJs, /aria-label="Mover imagem \$\{idx \+ 1\} para a esquerda"/);
   assert.match(adminJs, /aria-label="Mover imagem \$\{idx \+ 1\} para a direita"/);
