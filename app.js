@@ -2957,7 +2957,7 @@ let cart = [];
 let activeCategory = 'all';
 let searchQuery = '';
 let minPriceFilter = 0;
-let maxPriceFilter = 60;
+let maxPriceFilter = Infinity;
 let sortBy = 'default';
 const PRODUCTS_PER_PAGE = 24;
 let currentCatalogPage = 1;
@@ -3535,7 +3535,7 @@ function renderProductsGrid() {
     });
     
     // Se estiver na página inicial (categoria "Todas", sem busca ativa e sem filtros), mostra apenas os destaques e limita a 12
-    const isHomePage = activeCategory === 'all' && searchQuery.trim() === '' && minPriceFilter === 0 && maxPriceFilter === 60 && sortBy === 'default';
+    const isHomePage = activeCategory === 'all' && searchQuery.trim() === '' && minPriceFilter === 0 && maxPriceFilter === Infinity && sortBy === 'default';
     if (isHomePage) {
         filteredProducts = filteredProducts.filter(prod => prod.highlight === true);
         filteredProducts = filteredProducts.slice(0, 12);
@@ -4032,8 +4032,10 @@ function initFilters() {
     
     if (DOM.priceValMax) {
         DOM.priceValMax.addEventListener('change', (e) => {
-            maxPriceFilter = parseFloat(e.target.value) || 60;
-            if (DOM.priceSlider) DOM.priceSlider.value = maxPriceFilter;
+            const requestedMaximum = parseFloat(e.target.value);
+            maxPriceFilter = Number.isFinite(requestedMaximum) && requestedMaximum >= 0
+                ? requestedMaximum
+                : Infinity;
             currentCatalogPage = 1;
             renderProductsGrid();
         });

@@ -153,6 +153,16 @@ test('catálogo usa paginação e limita a quantidade de cards por página', asy
   assert.match(app, /Página \$\{currentCatalogPage\} de \$\{totalPages\}/);
 });
 
+test('catálogo não esconde produtos por um limite máximo de preço padrão', async () => {
+  const [index, app] = await Promise.all([read('index.html'), read('app.js')]);
+  assert.match(index, /id="price-val-max"[^>]*placeholder="Qualquer valor"/);
+  assert.doesNotMatch(index, /id="price-slider"[^>]*max="60"/);
+  assert.match(index, /app\.min\.js\?v=5\.3/);
+  assert.match(app, /let maxPriceFilter = Infinity/);
+  assert.match(app, /maxPriceFilter === Infinity/);
+  assert.match(app, /Number\.isFinite\(requestedMaximum\)/);
+});
+
 test('imagens do catálogo usam WebP otimizado com originais preservados', async () => {
   const app = await read('app.js');
   assert.match(app, /imagens-produtos-nana-4x5-cortadas/);
