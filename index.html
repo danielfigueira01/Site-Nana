@@ -186,7 +186,6 @@
             <div class="filter-group">
                 <h2 class="filter-group-title">Faixa de Preço</h2>
                 <div class="price-range-container">
-                    <input type="range" class="price-slider" id="price-slider" min="0" max="60" value="60" aria-label="Preço máximo">
                     <div class="price-inputs">
                         <div class="price-input-box">
                             <label for="price-val-min">De</label>
@@ -194,7 +193,7 @@
                         </div>
                         <div class="price-input-box">
                             <label for="price-val-max">Até</label>
-                            <input type="number" id="price-val-max" value="60" min="0">
+                            <input type="number" id="price-val-max" value="" min="0" placeholder="Qualquer valor" aria-label="Preço máximo">
                         </div>
                     </div>
                 </div>
@@ -488,6 +487,6 @@
     <!-- Catálogo online e aplicação -->
     <script src="vendor/supabase.min.js?v=2.112.2"></script>
     <script src="supabase-config.js?v=1.0"></script>
-    <script src="app.min.js?v=5.2"></script>
+    <script src="app.min.js?v=5.3"></script>
 </body>
 </html>
