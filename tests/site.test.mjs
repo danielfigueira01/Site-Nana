@@ -189,3 +189,11 @@ test('nomes repetidos recebem identificação de variação sem excluir produtos
   assert.match(app, /Variação \$\{variantCode\}/);
   assert.match(app, /products = disambiguateProductNames/);
 });
+
+test('a categoria tangas substitui calcinhas em toda a interface estática', async () => {
+  const [index, admin] = await Promise.all([read('index.html'), read('admin.html')]);
+  assert.doesNotMatch(index, />Calcinhas</i);
+  assert.doesNotMatch(admin, />Calcinhas</i);
+  assert.match(index, /data-category="tangas"[^>]*>Tangas</);
+  assert.match(admin, /option value="tangas">Tangas</);
+});
