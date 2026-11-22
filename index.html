@@ -29,11 +29,11 @@
     
     <!-- Favicon -->
     <link rel="icon" href="logo.png" type="image/png">
-    <link rel="preload" as="image" href="banner_generico.webp" media="(min-width: 769px)" fetchpriority="high">
-    <link rel="preload" as="image" href="banner_generico_mobile.webp" media="(max-width: 768px)" fetchpriority="high">
+    <link rel="preload" as="image" href="banner_pecas.webp" fetchpriority="high">
+    <link rel="preload" href="fonts/fraunces-latin-full-normal.woff2" as="font" type="font/woff2" crossorigin>
     
     <!-- CSS Link -->
-    <link rel="stylesheet" href="index.min.css?v=6.0">
+    <link rel="stylesheet" href="index.min.css?v=6.1">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -119,6 +119,11 @@
     </header>
 
     <!-- --- Slider/Banner Section --- -->
+    <section class="hero-split" aria-label="Destaque da coleção">
+    <div class="hero-copy">
+        <p class="hero-title">Conforto para o seu <em>dia a dia</em></p>
+        <button type="button" class="hero-cta" onclick="scrollToProducts()">Ver coleção</button>
+    </div>
     <section class="hero-slider" id="hero-slider-section">
         <div id="slider-container">
             <!-- Renderizado dinamicamente via JS -->
@@ -126,6 +131,7 @@
         <div class="slider-dots" id="slider-dots">
             <!-- Renderizado dinamicamente via JS -->
         </div>
+    </section>
     </section>
 
     <!-- --- Trust Strip --- -->
@@ -515,6 +521,6 @@
     <!-- Catálogo online e aplicação -->
     <script src="vendor/supabase.min.js?v=2.112.2"></script>
     <script src="supabase-config.js?v=1.0"></script>
-    <script src="app.min.js?v=6.0"></script>
+    <script src="app.min.js?v=6.1"></script>
 </body>
 </html>

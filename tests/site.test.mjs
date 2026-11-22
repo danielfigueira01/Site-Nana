@@ -127,7 +127,7 @@ test('gerenciador de imagens exibe ordem, exclusão e imagem principal', async (
   const [adminHtml, adminJs] = await Promise.all([read('admin.html'), read('admin.js')]);
   assert.match(adminHtml, /grid-template-rows:\s*minmax\(0, 1fr\) 40px/);
   assert.match(adminHtml, /\.image-primary-badge/);
-  assert.match(adminHtml, /admin\.min\.js\?v=5\.1/);
+  assert.match(adminHtml, /admin\.min\.js\?v=5\.2/);
   assert.match(adminHtml, /admin-supabase\.min\.js\?v=1\.5/);
   assert.match(adminJs, /Principal/);
   assert.match(adminJs, /aria-label="Mover imagem \$\{idx \+ 1\} para a esquerda"/);
@@ -158,7 +158,7 @@ test('catálogo não esconde produtos por um limite máximo de preço padrão', 
   const [index, app] = await Promise.all([read('index.html'), read('app.js')]);
   assert.match(index, /id="price-val-max"[^>]*placeholder="Qualquer valor"/);
   assert.doesNotMatch(index, /id="price-slider"[^>]*max="60"/);
-  assert.match(index, /app\.min\.js\?v=6\.0/);
+  assert.match(index, /app\.min\.js\?v=6\.1/);
   assert.match(app, /let maxPriceFilter = Infinity/);
   assert.match(app, /maxPriceFilter === Infinity/);
   assert.match(app, /Number\.isFinite\(requestedMaximum\)/);
@@ -203,7 +203,7 @@ test('acabamento v6: celular, confiança e janela de produto', async () => {
   const [index, app, css] = await Promise.all([read('index.html'), read('app.js'), read('index.css')]);
   assert.match(index, /class="trust-strip"/);
   assert.match(index, /logo-header\.png/);
-  assert.match(index, /banner_generico_mobile\.webp/);
+  assert.match(index, /banner_pecas\.webp/);
   assert.match(index, /filters-toggle/);
   assert.match(index, /setCategory\('calcas', event\)/);
   assert.doesNotMatch(index, />Baby Doll</);
@@ -211,9 +211,12 @@ test('acabamento v6: celular, confiança e janela de produto', async () => {
   assert.doesNotMatch(app, /product-price-prefix">Por</);
   assert.match(app, /function getBannerMobileImage/);
   assert.match(css, /--slide-bg-mobile/);
+  assert.match(index, /class="hero-title"/);
+  assert.match(app, /banner_pecas\.webp/);
   await Promise.all([
     access(path.join(root, 'logo.png')),
     access(path.join(root, 'logo-header.png')),
-    access(path.join(root, 'banner_generico_mobile.webp'))
+    access(path.join(root, 'banner_pecas.webp')),
+    access(path.join(root, 'fonts/fraunces-latin-full-normal.woff2'))
   ]);
 });
