@@ -2921,13 +2921,21 @@ const PRODUCTS_DATA = [
     }
 ];
 
+// Versão vertical/compacta do banner para celular (o texto do banner fica legível).
+function getBannerMobileImage(banner) {
+    if (banner && banner.mobileImage) return banner.mobileImage;
+    if (banner && /banner_generico\.(webp|png|jpg)$/.test(banner.image || '')) return 'banner_generico_mobile.webp';
+    return banner ? banner.image : '';
+}
+
 // --- Banners Informativos (Atualizados para o novo tom de voz) ---
 const BANNERS_DATA = [
     {
         id: 1,
         title: "Nana Moda Íntima",
         text: "Conforto, beleza e elegância para todos os momentos. Escolha suas peças favoritas e finalize seu pedido pelo WhatsApp de forma simples, rápida e segura.",
-        image: "banner_generico.webp"
+        image: "banner_generico.webp",
+        mobileImage: "banner_generico_mobile.webp"
     }
 ];
 
@@ -3132,11 +3140,6 @@ window.changeModalMainImage = function(src, element) {
     const mainImg = document.getElementById('modal-main-img');
     if (mainImg) {
         mainImg.src = getProductImageSrc(src);
-        // Atualizar também o fundo do zoom
-        const result = document.getElementById('zoom-result');
-        if (result) {
-            result.style.backgroundImage = `url("${mainImg.src.replace(/"/g, '%22')}")`;
-        }
     }
     const thumbs = document.querySelectorAll('.gallery-thumb, .gallery-photo-card');
     thumbs.forEach(t => t.classList.remove('active'));
@@ -3146,68 +3149,26 @@ window.changeModalMainImage = function(src, element) {
 function initImageZoom() {
     const container = document.getElementById('modal-main-img-container');
     const img = document.getElementById('modal-main-img');
-    const lens = document.getElementById('zoom-lens');
-    const result = document.getElementById('zoom-result');
-    
-    if (!container || !img || !lens || !result) return;
-    
-    // Configurações iniciais
-    if (window.innerWidth < 992) {
-        lens.style.display = 'none';
-        result.style.display = 'none';
-        container.style.cursor = 'default';
-        return;
-    }
-    
-    container.style.cursor = 'crosshair';
-    
-    function moveLens(e) {
-        if (window.innerWidth < 992) return;
-        e.preventDefault();
-        
+    if (!container || !img) return;
+
+    // Zoom dentro da própria foto: nunca cobre nome, preço ou tamanhos.
+    const canHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    if (!canHover) return;
+
+    container.classList.add('zoomable');
+
+    container.addEventListener('mousemove', (e) => {
         const rect = container.getBoundingClientRect();
-        let x = e.clientX - rect.left;
-        let y = e.clientY - rect.top;
-        
-        const lensWidth = lens.offsetWidth;
-        const lensHeight = lens.offsetHeight;
-        
-        let lensX = x - (lensWidth / 2);
-        let lensY = y - (lensHeight / 2);
-        
-        if (lensX < 0) lensX = 0;
-        if (lensY < 0) lensY = 0;
-        if (lensX > container.offsetWidth - lensWidth) lensX = container.offsetWidth - lensWidth;
-        if (lensY > container.offsetHeight - lensHeight) lensY = container.offsetHeight - lensHeight;
-        
-        lens.style.left = `${lensX}px`;
-        lens.style.top = `${lensY}px`;
-        
-        const scaleX = result.offsetWidth / lensWidth;
-        const scaleY = result.offsetHeight / lensHeight;
-        
-        result.style.backgroundPosition = `-${lensX * scaleX}px -${lensY * scaleY}px`;
-    }
-    
-    container.addEventListener('mouseenter', () => {
-        if (window.innerWidth < 992) return;
-        lens.style.display = 'block';
-        result.style.display = 'block';
-        
-        result.style.backgroundImage = `url('${img.src}')`;
-        
-        const scaleX = result.offsetWidth / lens.offsetWidth;
-        const scaleY = result.offsetHeight / lens.offsetHeight;
-        
-        result.style.backgroundSize = `${container.offsetWidth * scaleX}px ${container.offsetHeight * scaleY}px`;
+        const x = ((e.clientX - rect.left) / rect.width) * 100;
+        const y = ((e.clientY - rect.top) / rect.height) * 100;
+        img.style.transformOrigin = `${x}% ${y}%`;
     });
-    
+
+    container.addEventListener('mouseenter', () => container.classList.add('is-zoomed'));
     container.addEventListener('mouseleave', () => {
-        lens.style.display = 'none';
-        result.style.display = 'none';
+        container.classList.remove('is-zoomed');
+        img.style.transformOrigin = 'center center';
     });
-    
-    container.addEventListener('mousemove', moveLens);
 }
 
 
@@ -3396,12 +3357,13 @@ function initSlider() {
     
     DOM.sliderContainer.innerHTML = list.map((banner, index) => `
         <button type="button" class="slide ${index === 0 ? 'active' : ''}" data-index="${index}" aria-label="${escapeAttribute(banner.title || `Banner ${index + 1}`)}: ver catálogo" aria-hidden="${index !== 0}" tabindex="${index === 0 ? '0' : '-1'}">
-            <span class="slide-bg" data-image="${escapeAttribute(getProductImageSrc(banner.image))}"></span>
+            <span class="slide-bg" data-image="${escapeAttribute(getProductImageSrc(banner.image))}" data-image-mobile="${escapeAttribute(getProductImageSrc(getBannerMobileImage(banner)))}"></span>
         </button>
     `).join('');
 
     DOM.sliderContainer.querySelectorAll('.slide-bg').forEach(background => {
         background.style.backgroundImage = `url("${background.dataset.image.replace(/"/g, '%22')}")`;
+        background.style.setProperty('--slide-bg-mobile', `url("${(background.dataset.imageMobile || background.dataset.image).replace(/"/g, '%22')}")`);
     });
 
     DOM.sliderContainer.querySelectorAll('.slide').forEach(slide => {
@@ -3602,7 +3564,6 @@ function renderProductsGrid() {
                     <span class="product-category">${escapeHtml(prod.categoryName)}</span>
                     <h3 class="product-name">${productName}</h3>
                     <div class="product-price-row">
-                        <span class="product-price-prefix">Por</span>
                         <span class="product-price">${formatCurrency(prod.price)}</span>
                         ${prod.name.includes('/ Un') || prod.name.includes('RENDA') ? '<span class="product-price-unit">/ Un</span>' : ''}
                     </div>
@@ -3800,7 +3761,6 @@ function openProductModal(productId) {
             <div class="product-detail-img-area">
                 <div class="main-image-container" id="modal-main-img-container" style="position: relative; border: 1px solid var(--border-color); border-radius: var(--border-radius-md); overflow: hidden; background-color: white; aspect-ratio: 4/5; display: flex; align-items: center; justify-content: center;">
                     <img id="modal-main-img" src="${safeMainImage}" alt="${escapeAttribute(product.name)}" onerror="this.src='logo.jpg'" style="width: 100%; height: 100%; object-fit: cover;" decoding="async">
-                    <div id="zoom-lens" style="display: none; position: absolute; border: 2px solid var(--rose-dark, #ab8f8e); background-color: rgba(255, 255, 255, 0.25); pointer-events: none; width: 120px; height: 150px; box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.08); z-index: 5;"></div>
                 </div>
             </div>
             
@@ -3844,7 +3804,6 @@ function openProductModal(productId) {
                 </div>
                 `}
             </div>
-            <div id="zoom-result" class="zoom-result-box"></div>
         </div>
         
         ${productImages.length > 1 ? `

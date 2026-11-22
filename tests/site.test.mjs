@@ -13,7 +13,8 @@ test('páginas essenciais e SEO estão presentes', async () => {
   assert.match(index, /<h1\b/i);
   assert.match(index, /rel="canonical"/i);
   assert.match(index, /application\/ld\+json/i);
-  assert.match(index, /href="admin\.html"/i);
+  assert.doesNotMatch(index, /href="admin\.html"/i);
+  await access(path.join(root, 'admin.html'));
   await Promise.all([
     access(path.join(root, 'termos-de-uso.html')),
     access(path.join(root, 'politica-de-privacidade.html')),
@@ -157,7 +158,7 @@ test('catálogo não esconde produtos por um limite máximo de preço padrão', 
   const [index, app] = await Promise.all([read('index.html'), read('app.js')]);
   assert.match(index, /id="price-val-max"[^>]*placeholder="Qualquer valor"/);
   assert.doesNotMatch(index, /id="price-slider"[^>]*max="60"/);
-  assert.match(index, /app\.min\.js\?v=5\.3/);
+  assert.match(index, /app\.min\.js\?v=6\.0/);
   assert.match(app, /let maxPriceFilter = Infinity/);
   assert.match(app, /maxPriceFilter === Infinity/);
   assert.match(app, /Number\.isFinite\(requestedMaximum\)/);
@@ -196,4 +197,23 @@ test('a categoria tangas substitui calcinhas em toda a interface estática', asy
   assert.doesNotMatch(admin, />Calcinhas</i);
   assert.match(index, /data-category="tangas"[^>]*>Tangas</);
   assert.match(admin, /option value="tangas">Tangas</);
+});
+
+test('acabamento v6: celular, confiança e janela de produto', async () => {
+  const [index, app, css] = await Promise.all([read('index.html'), read('app.js'), read('index.css')]);
+  assert.match(index, /class="trust-strip"/);
+  assert.match(index, /logo-header\.png/);
+  assert.match(index, /banner_generico_mobile\.webp/);
+  assert.match(index, /filters-toggle/);
+  assert.match(index, /setCategory\('calcas', event\)/);
+  assert.doesNotMatch(index, />Baby Doll</);
+  assert.doesNotMatch(app, /zoom-result|zoom-lens/);
+  assert.doesNotMatch(app, /product-price-prefix">Por</);
+  assert.match(app, /function getBannerMobileImage/);
+  assert.match(css, /--slide-bg-mobile/);
+  await Promise.all([
+    access(path.join(root, 'logo.png')),
+    access(path.join(root, 'logo-header.png')),
+    access(path.join(root, 'banner_generico_mobile.webp'))
+  ]);
 });

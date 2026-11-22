@@ -28,11 +28,12 @@
     <meta name="twitter:image" content="https://nanamodaintima.com.br/logo.jpg">
     
     <!-- Favicon -->
-    <link rel="icon" href="logo.jpg" type="image/jpeg">
-    <link rel="preload" as="image" href="banner_generico.webp" fetchpriority="high">
+    <link rel="icon" href="logo.png" type="image/png">
+    <link rel="preload" as="image" href="banner_generico.webp" media="(min-width: 769px)" fetchpriority="high">
+    <link rel="preload" as="image" href="banner_generico_mobile.webp" media="(max-width: 768px)" fetchpriority="high">
     
     <!-- CSS Link -->
-    <link rel="stylesheet" href="index.min.css?v=5.2">
+    <link rel="stylesheet" href="index.min.css?v=6.0">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -64,14 +65,14 @@
     <header>
         <div class="header-top">
             <div class="container">
-                <span>Enviamos para todo o Brasil. Consulte as condições de envio pelo WhatsApp.</span>
+                <span>Enviamos para todo o Brasil<span class="header-top-extra">. Consulte as condições de envio pelo WhatsApp.</span></span>
             </div>
         </div>
         
         <div class="header-main container">
             <!-- Brand Logo -->
             <a href="#" class="logo-area" onclick="setCategory('all', event); scrollToProducts();">
-                <img class="logo-img" src="logo.jpg" alt="Nana Moda Íntima Logo" id="brand-logo-img">
+                <img class="logo-img" src="logo-header.png" alt="Nana Moda Íntima" id="brand-logo-img" width="480" height="283">
             </a>
             
             <!-- Search Bar -->
@@ -87,7 +88,7 @@
                 <!-- WhatsApp Button -->
                 <a href="https://wa.me/5522988524928" target="_blank" rel="noopener noreferrer" class="header-whatsapp-btn" id="header-whatsapp-trigger" aria-label="Falar no WhatsApp">
                     <svg viewBox="0 0 24 24"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0 0 12.04 2zm5.72 13.9c-.25.7-1.46 1.37-2 1.41-.57.05-1.31.25-3.83-.8-3.23-1.34-5.32-4.63-5.48-4.85-.16-.22-1.3-1.73-1.3-3.3 0-1.57.82-2.34 1.11-2.65.25-.26.66-.37.98-.37.1 0 .2 0 .29.01.29.01.44.03.63.49.2.49.7 1.71.76 1.84.06.13.1.28.01.46-.08.18-.13.29-.26.45-.13.16-.28.36-.4.49-.13.14-.27.29-.12.55.15.25.68 1.13 1.46 1.83.99.9 1.83 1.18 2.09 1.3.26.13.41.11.56-.06.15-.17.65-.76.82-1.02.17-.26.34-.22.57-.13.23.09 1.48.7 1.73.82.25.12.42.18.48.29.07.1.07.59-.18 1.29z"/></svg>
-                    <span>Falar no WhatsApp</span>
+                    <span class="header-whatsapp-label">Falar no WhatsApp</span>
                 </a>
                 
                 <!-- Bag Button -->
@@ -112,7 +113,7 @@
                 <a href="#" class="nav-link" data-category="plus-size" id="nav-cat-plus">Plus Size</a>
                 <a href="#" class="nav-link" data-category="infantil" id="nav-cat-infantil">Infantil</a>
                 <a href="#" class="nav-link" data-category="meias" id="nav-cat-meias">Meias</a>
-                <a href="#" class="nav-link" id="nav-how-it-works" onclick="openHowItWorksModal(event)" style="color: var(--accent-color); font-weight: 700; border-left: 1px solid var(--border-color); padding-left: 15px; margin-left: 10px;">Como Funciona</a>
+                <a href="#" class="nav-link nav-link-how" id="nav-how-it-works" onclick="openHowItWorksModal(event)">Como Funciona</a>
             </div>
         </nav>
     </header>
@@ -127,10 +128,32 @@
         </div>
     </section>
 
+    <!-- --- Trust Strip --- -->
+    <section class="trust-strip" aria-label="Por que comprar na Nana">
+        <div class="container trust-strip-grid">
+            <div class="trust-item">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 9v2h2v9h6v-6h4v6h6v-9h2V9L12 3zm6 15h-2v-6H8v6H6v-8.5l6-3.6 6 3.6V18z"/></svg>
+                <div><strong>Loja de fábrica</strong><span>Direto de Nova Friburgo (RJ)</span></div>
+            </div>
+            <div class="trust-item">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9 1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+                <div><strong>Envio para todo o Brasil</strong><span>Frete combinado no WhatsApp</span></div>
+            </div>
+            <div class="trust-item">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4c-1.11 0-2 .89-2 2v12c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+                <div><strong>Pix, cartão ou boleto</strong><span>Você escolhe ao finalizar</span></div>
+            </div>
+            <a class="trust-item" href="termos-de-uso.html">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1 3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                <div><strong>Troca e devolução</strong><span>Conforme o Código do Consumidor</span></div>
+            </a>
+        </div>
+    </section>
+
     <!-- --- Title Section --- -->
-    <section class="container" style="margin-top: 4rem; margin-bottom: 3rem; text-align: center;">
-        <h1 class="section-title">Encontre sua peça ideal</h1>
-        <p style="color: var(--text-muted); font-size: 1.05rem; line-height: 1.65; max-width: 650px; margin: 1.5rem auto 0 auto; font-weight: 500;">
+    <section class="container catalog-intro">
+        <h1 class="section-title">Moda íntima direto da fábrica</h1>
+        <p class="catalog-intro-text">
             Navegue pelo nosso catálogo virtual, escolha suas peças favoritas e finalize seu pedido pelo WhatsApp com a equipe da Nana de forma simples e rápida.
         </p>
     </section>
@@ -138,7 +161,12 @@
     <!-- --- Main Content (Catalog Layout) --- -->
     <main class="container main-layout" id="catalog-section">
         <!-- Sidebar Filters -->
-        <aside class="sidebar-filters">
+        <aside class="sidebar-filters" id="sidebar-filters">
+            <button type="button" class="filters-toggle" aria-expanded="false" aria-controls="filters-body" onclick="const a=document.getElementById('sidebar-filters');const open=a.classList.toggle('is-open');this.setAttribute('aria-expanded',open);">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
+                Filtrar por categoria e preço
+            </button>
+            <div class="filters-body" id="filters-body">
             <!-- Category Filter -->
             <div class="filter-group">
                 <h2 class="filter-group-title">Categorias</h2>
@@ -197,6 +225,7 @@
                         </div>
                     </div>
                 </div>
+            </div>
             </div>
         </aside>
 
@@ -268,7 +297,6 @@
                     <li><a href="termos-de-uso.html">Trocas e atendimento</a></li>
                     <li><a href="politica-de-privacidade.html">Política de privacidade</a></li>
                     <li><a href="mailto:nanamodaintima@hotmail.com">Fale conosco</a></li>
-                    <li><a href="admin.html">Painel administrativo</a></li>
                 </ul>
             </div>
             
@@ -276,11 +304,11 @@
                 <h3>Categorias</h3>
                 <ul>
                     <li><a href="#" onclick="setCategory('linha-noite', event); scrollToProducts();">Linha Noite</a></li>
-                    <li><a href="#" onclick="setCategory('linha-noite', event); scrollToProducts();">Baby Doll</a></li>
                     <li><a href="#" onclick="setCategory('tangas', event); scrollToProducts();">Tangas</a></li>
                     <li><a href="#" onclick="setCategory('soutiens', event); scrollToProducts();">Sutiãs</a></li>
-                    <li><a href="#" onclick="setCategory('plus-size', event); scrollToProducts();">Plus Size</a></li>
+                    <li><a href="#" onclick="setCategory('calcas', event); scrollToProducts();">Calças</a></li>
                     <li><a href="#" onclick="setCategory('masculino', event); scrollToProducts();">Masculino</a></li>
+                    <li><a href="#" onclick="setCategory('plus-size', event); scrollToProducts();">Plus Size</a></li>
                     <li><a href="#" onclick="setCategory('infantil', event); scrollToProducts();">Infantil</a></li>
                     <li><a href="#" onclick="setCategory('meias', event); scrollToProducts();">Meias</a></li>
                 </ul>
@@ -487,6 +515,6 @@
     <!-- Catálogo online e aplicação -->
     <script src="vendor/supabase.min.js?v=2.112.2"></script>
     <script src="supabase-config.js?v=1.0"></script>
-    <script src="app.min.js?v=5.3"></script>
+    <script src="app.min.js?v=6.0"></script>
 </body>
 </html>
