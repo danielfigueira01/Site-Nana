@@ -158,7 +158,7 @@ test('catálogo não esconde produtos por um limite máximo de preço padrão', 
   const [index, app] = await Promise.all([read('index.html'), read('app.js')]);
   assert.match(index, /id="price-val-max"[^>]*placeholder="Qualquer valor"/);
   assert.doesNotMatch(index, /id="price-slider"[^>]*max="60"/);
-  assert.match(index, /app\.min\.js\?v=7\.0/);
+  assert.match(index, /app\.min\.js\?v=7\.1/);
   assert.match(app, /let maxPriceFilter = Infinity/);
   assert.match(app, /maxPriceFilter === Infinity/);
   assert.match(app, /Number\.isFinite\(requestedMaximum\)/);
@@ -214,8 +214,7 @@ test('acabamento v6: celular, confiança e janela de produto', async () => {
   await Promise.all([
     access(path.join(root, 'logo.png')),
     access(path.join(root, 'logo-header.png')),
-    access(path.join(root, 'fonts/bodoni-moda-latin-opsz-normal.woff2')),
-    access(path.join(root, 'fonts/jost-latin-wght-normal.woff2'))
+    access(path.join(root, 'fonts/montserrat-latin-wght-normal.woff2'))
   ]);
 });
 
@@ -227,7 +226,8 @@ test('carrossel de banners: 6 slides em HTML, com controles e fontes próprias',
   assert.match(index, /id="hb-proximo"/);
   assert.match(app, /function initBannerCarousel/);
   assert.match(app, /prefers-reduced-motion: reduce/);
-  assert.match(css, /font-family: "Bodoni Moda"/);
-  assert.match(css, /font-family: "Jost"/);
-  assert.doesNotMatch(index, /Fraunces|family=Inter/);
+  assert.match(css, /font-family: "Montserrat"/);
+  assert.doesNotMatch(css, /Bodoni Moda|"Jost"/);
+  assert.match(index, /id="hb-pausa"/);
+  assert.doesNotMatch(app, /mouseenter', \(\) => \{ paused = true/);
 });

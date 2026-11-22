@@ -29,11 +29,10 @@
     
     <!-- Favicon -->
     <link rel="icon" href="logo.png" type="image/png">
-    <link rel="preload" href="fonts/bodoni-moda-latin-opsz-normal.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="fonts/jost-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="fonts/montserrat-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
     
     <!-- CSS Link -->
-    <link rel="stylesheet" href="index.min.css?v=7.0">
+    <link rel="stylesheet" href="index.min.css?v=7.1">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -235,6 +234,10 @@
             </div>
             <button type="button" class="hb-seta" id="hb-proximo" aria-label="Próximo banner">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+            <button type="button" class="hb-seta hb-pausa" id="hb-pausa" aria-label="Pausar banners" aria-pressed="false">
+                <svg class="icone-pausa" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>
+                <svg class="icone-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z"/></svg>
             </button>
         </div>
     </section>
@@ -626,6 +629,6 @@
     <!-- Catálogo online e aplicação -->
     <script src="vendor/supabase.min.js?v=2.112.2"></script>
     <script src="supabase-config.js?v=1.0"></script>
-    <script src="app.min.js?v=7.0"></script>
+    <script src="app.min.js?v=7.1"></script>
 </body>
 </html>

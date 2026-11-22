@@ -3408,7 +3408,7 @@ function initBannerCarousel() {
     const next = document.getElementById('hb-proximo');
     if (slides.length < 2) return;
 
-    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const pauseBtn = document.getElementById('hb-pausa');
     const INTERVAL = 6000;
     let current = 0;
     let timer = null;
@@ -3439,7 +3439,7 @@ function initBannerCarousel() {
 
     function start() {
         stop();
-        if (reduceMotion || paused || document.hidden) return;
+        if (paused || document.hidden) return;
         timer = setInterval(() => show(current + 1), INTERVAL);
     }
 
@@ -3452,11 +3452,13 @@ function initBannerCarousel() {
     next && next.addEventListener('click', () => go(current + 1));
     dots.forEach((dot, i) => dot.addEventListener('click', () => go(i)));
 
-    root.addEventListener('mouseenter', () => { paused = true; stop(); });
-    root.addEventListener('mouseleave', () => { paused = false; start(); });
-    root.addEventListener('focusin', () => { paused = true; stop(); });
-    root.addEventListener('focusout', (event) => {
-        if (!root.contains(event.relatedTarget)) { paused = false; start(); }
+    // Passa sempre sozinho; o botão de pausa é o único que interrompe.
+    pauseBtn && pauseBtn.addEventListener('click', () => {
+        paused = !paused;
+        pauseBtn.setAttribute('aria-pressed', String(paused));
+        pauseBtn.setAttribute('aria-label', paused ? 'Continuar passando os banners' : 'Pausar banners');
+        pauseBtn.classList.toggle('pausado', paused);
+        if (paused) stop(); else start();
     });
     document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
 
