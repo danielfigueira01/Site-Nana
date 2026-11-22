@@ -158,7 +158,7 @@ test('catálogo não esconde produtos por um limite máximo de preço padrão', 
   const [index, app] = await Promise.all([read('index.html'), read('app.js')]);
   assert.match(index, /id="price-val-max"[^>]*placeholder="Qualquer valor"/);
   assert.doesNotMatch(index, /id="price-slider"[^>]*max="60"/);
-  assert.match(index, /app\.min\.js\?v=6\.0/);
+  assert.match(index, /app\.min\.js\?v=7\.0/);
   assert.match(app, /let maxPriceFilter = Infinity/);
   assert.match(app, /maxPriceFilter === Infinity/);
   assert.match(app, /Number\.isFinite\(requestedMaximum\)/);
@@ -203,7 +203,7 @@ test('acabamento v6: celular, confiança e janela de produto', async () => {
   const [index, app, css] = await Promise.all([read('index.html'), read('app.js'), read('index.css')]);
   assert.match(index, /class="trust-strip"/);
   assert.match(index, /logo-header\.png/);
-  assert.match(index, /banner_generico_mobile\.webp/);
+  assert.match(index, /id="hero-banners"/);
   assert.match(index, /filters-toggle/);
   assert.match(index, /setCategory\('calcas', event\)/);
   assert.doesNotMatch(index, />Baby Doll</);
@@ -214,6 +214,20 @@ test('acabamento v6: celular, confiança e janela de produto', async () => {
   await Promise.all([
     access(path.join(root, 'logo.png')),
     access(path.join(root, 'logo-header.png')),
-    access(path.join(root, 'banner_generico_mobile.webp'))
+    access(path.join(root, 'fonts/bodoni-moda-latin-opsz-normal.woff2')),
+    access(path.join(root, 'fonts/jost-latin-wght-normal.woff2'))
   ]);
+});
+
+test('carrossel de banners: 6 slides em HTML, com controles e fontes próprias', async () => {
+  const [index, app, css] = await Promise.all([read('index.html'), read('app.js'), read('index.css')]);
+  assert.equal((index.match(/class="hb-slide /g) || []).length, 6);
+  assert.equal((index.match(/aria-label="Banner \d"/g) || []).length, 6);
+  assert.match(index, /id="hb-anterior"/);
+  assert.match(index, /id="hb-proximo"/);
+  assert.match(app, /function initBannerCarousel/);
+  assert.match(app, /prefers-reduced-motion: reduce/);
+  assert.match(css, /font-family: "Bodoni Moda"/);
+  assert.match(css, /font-family: "Jost"/);
+  assert.doesNotMatch(index, /Fraunces|family=Inter/);
 });

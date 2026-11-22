@@ -3396,6 +3396,96 @@ function initSlider() {
     }
 }
 
+// --- Carrossel de banners (HTML) ---
+function initBannerCarousel() {
+    const root = document.getElementById('hero-banners');
+    if (!root || root.dataset.ready) return;
+    root.dataset.ready = 'true';
+
+    const slides = Array.from(root.querySelectorAll('.hb-slide'));
+    const dots = Array.from(root.querySelectorAll('#hb-pontos button'));
+    const prev = document.getElementById('hb-anterior');
+    const next = document.getElementById('hb-proximo');
+    if (slides.length < 2) return;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const INTERVAL = 6000;
+    let current = 0;
+    let timer = null;
+    let paused = false;
+
+    function show(index) {
+        current = (index + slides.length) % slides.length;
+        slides.forEach((slide, i) => {
+            const active = i === current;
+            slide.classList.toggle('ativo', active);
+            slide.setAttribute('aria-hidden', String(!active));
+            slide.querySelectorAll('a, button').forEach(el => {
+                if (active) el.removeAttribute('tabindex');
+                else el.setAttribute('tabindex', '-1');
+            });
+        });
+        dots.forEach((dot, i) => {
+            dot.classList.toggle('ativo', i === current);
+            if (i === current) dot.setAttribute('aria-current', 'true');
+            else dot.removeAttribute('aria-current');
+        });
+    }
+
+    function stop() {
+        if (timer) clearInterval(timer);
+        timer = null;
+    }
+
+    function start() {
+        stop();
+        if (reduceMotion || paused || document.hidden) return;
+        timer = setInterval(() => show(current + 1), INTERVAL);
+    }
+
+    function go(index) {
+        show(index);
+        start();
+    }
+
+    prev && prev.addEventListener('click', () => go(current - 1));
+    next && next.addEventListener('click', () => go(current + 1));
+    dots.forEach((dot, i) => dot.addEventListener('click', () => go(i)));
+
+    root.addEventListener('mouseenter', () => { paused = true; stop(); });
+    root.addEventListener('mouseleave', () => { paused = false; start(); });
+    root.addEventListener('focusin', () => { paused = true; stop(); });
+    root.addEventListener('focusout', (event) => {
+        if (!root.contains(event.relatedTarget)) { paused = false; start(); }
+    });
+    document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+
+    // Arrastar para o lado no celular
+    let startX = null;
+    let startY = null;
+    root.addEventListener('touchstart', (event) => {
+        const t = event.touches[0];
+        startX = t.clientX;
+        startY = t.clientY;
+    }, { passive: true });
+    root.addEventListener('touchend', (event) => {
+        if (startX === null) return;
+        const t = event.changedTouches[0];
+        const dx = t.clientX - startX;
+        const dy = t.clientY - startY;
+        if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) go(current + (dx < 0 ? 1 : -1));
+        startX = null;
+    }, { passive: true });
+
+    root.addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowRight') go(current + 1);
+        if (event.key === 'ArrowLeft') go(current - 1);
+    });
+
+    show(0);
+    start();
+}
+
 function startSlideTimer() {
     stopSlideTimer();
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -4033,6 +4123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadProducts();
     loadBanners();
     initSlider();
+    initBannerCarousel();
     loadCart();
     initFilters();
     renderProductsGrid();
