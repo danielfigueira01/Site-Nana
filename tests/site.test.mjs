@@ -158,7 +158,7 @@ test('catálogo não esconde produtos por um limite máximo de preço padrão', 
   const [index, app] = await Promise.all([read('index.html'), read('app.js')]);
   assert.match(index, /id="price-val-max"[^>]*placeholder="Qualquer valor"/);
   assert.doesNotMatch(index, /id="price-slider"[^>]*max="60"/);
-  assert.match(index, /app\.min\.js\?v=7\.1/);
+  assert.match(index, /app\.min\.js\?v=7\.2/);
   assert.match(app, /let maxPriceFilter = Infinity/);
   assert.match(app, /maxPriceFilter === Infinity/);
   assert.match(app, /Number\.isFinite\(requestedMaximum\)/);
@@ -230,4 +230,20 @@ test('carrossel de banners: 6 slides em HTML, com controles e fontes próprias',
   assert.doesNotMatch(css, /Bodoni Moda|"Jost"/);
   assert.match(index, /id="hb-pausa"/);
   assert.doesNotMatch(app, /mouseenter', \(\) => \{ paused = true/);
+});
+
+test('analytics só com consentimento e Instagram com reserva', async () => {
+  const [index, app, privacy] = await Promise.all([read('index.html'), read('app.js'), read('politica-de-privacidade.html')]);
+  assert.match(index, /window\.NANA_CONFIG/);
+  assert.match(index, /id="cookie-aviso"/);
+  assert.match(index, /script-src[^;]*https:\/\/www\.googletagmanager\.com/);
+  assert.match(index, /connect-src[^;]*https:\/\/feeds\.behold\.so/);
+  assert.match(index, /id="instagram"/);
+  assert.match(app, /function initAnalytics/);
+  assert.match(app, /readConsent\(\)/);
+  assert.match(app, /if \(choice === 'granted'\) loadGoogleAnalytics/);
+  assert.match(app, /function initInstagram/);
+  assert.match(app, /nanaTrack\('generate_lead'/);
+  assert.doesNotMatch(app, /innerHTML = [^;]*post\./);
+  assert.match(privacy, /id="estatisticas"/);
 });
