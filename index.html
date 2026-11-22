@@ -29,11 +29,11 @@
     
     <!-- Favicon -->
     <link rel="icon" href="logo.png" type="image/png">
-    <link rel="preload" as="image" href="banner_generico.webp" media="(min-width: 769px)" fetchpriority="high">
-    <link rel="preload" as="image" href="banner_generico_mobile.webp" media="(max-width: 768px)" fetchpriority="high">
+    <link rel="preload" href="fonts/bodoni-moda-latin-opsz-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="fonts/jost-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
     
     <!-- CSS Link -->
-    <link rel="stylesheet" href="index.min.css?v=6.0">
+    <link rel="stylesheet" href="index.min.css?v=7.0">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -118,13 +118,124 @@
         </nav>
     </header>
 
-    <!-- --- Slider/Banner Section --- -->
-    <section class="hero-slider" id="hero-slider-section">
-        <div id="slider-container">
-            <!-- Renderizado dinamicamente via JS -->
+    <!-- --- Carrossel de banners --- -->
+    <section class="hb" id="hero-banners" aria-roledescription="carrossel" aria-label="Destaques da Nana">
+        <div class="hb-trilho" id="hb-trilho" aria-live="off">
+            <!-- A · Editorial -->
+            <article class="hb-slide hb-a ativo" aria-roledescription="slide" aria-label="1 de 6">
+                <div class="hb-texto">
+                    <p class="hb-rotulo">Há 24 anos em Nova Friburgo</p>
+                    <h2 class="hb-titulo">Conforto que acompanha <em>o seu dia.</em></h2>
+                    <p class="hb-sub">Lingerie, pijamas e peças do dia a dia com preço de fábrica.</p>
+                    <div class="hb-acoes">
+                        <a class="hb-btn" href="#catalog-section" onclick="setCategory('all', event); scrollToProducts();">Ver coleção</a>
+                        <a class="hb-link" href="https://wa.me/5522988524928" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>
+                    </div>
+                </div>
+                <div class="hb-visual" aria-hidden="true">
+                    <span class="hb-a-arco"><img src="imagens-produtos-nana-4x5-cortadas/sem-ref-toper-virginia-toper-virginia-01-4x5.webp" alt="" width="1080" height="1350" fetchpriority="high"></span>
+                    <span class="hb-etiqueta"><small>Toper Virgínia</small><strong>R$ 16,99</strong></span>
+                </div>
+            </article>
+
+            <!-- C · Preço de fábrica -->
+            <article class="hb-slide hb-c" aria-roledescription="slide" aria-label="2 de 6" aria-hidden="true">
+                <div class="hb-texto">
+                    <p class="hb-rotulo">Preço de fábrica</p>
+                    <h2 class="hb-titulo hb-preco"><span>Peças a partir de</span> <strong>R$ 6,50</strong></h2>
+                    <div class="hb-acoes">
+                        <a class="hb-btn hb-btn-escuro" href="#catalog-section" onclick="setCategory('all', event); scrollToProducts();" tabindex="-1">Ver todas as peças</a>
+                    </div>
+                    <p class="hb-nota">Valores do catálogo. O total é confirmado no WhatsApp.</p>
+                </div>
+                <div class="hb-visual" aria-hidden="true">
+                    <figure><span class="hb-moldura"><img src="imagens-produtos-nana-4x5-cortadas/2102-calca-rebatida-ref-2102-calca-rebatida-1837-01-4x5.webp" alt="" loading="lazy" width="1080" height="1350"></span><figcaption><span class="hb-nome">Calça Rebatida · </span><b>R$ 6,99</b></figcaption></figure>
+                    <figure><span class="hb-moldura"><img src="imagens-produtos-nana-4x5-cortadas/3078-top-reforcado-nadador-ref-3078-top-reforcado-nadador-5698-01-4x5.webp" alt="" loading="lazy" width="1080" height="1350"></span><figcaption><span class="hb-nome">Top Nadador · </span><b>R$ 13,50</b></figcaption></figure>
+                    <figure><span class="hb-moldura"><img src="imagens-produtos-nana-4x5-cortadas/sem-ref-tanga-fio-duplo-microfibra-tanga-fio-duplo-microfibra-01-4x5.webp" alt="" loading="lazy" width="1080" height="1350"></span><figcaption><span class="hb-nome">Tanga Fio Duplo · </span><b>R$ 7,50</b></figcaption></figure>
+                </div>
+            </article>
+
+            <!-- B · Linha Noite -->
+            <article class="hb-slide hb-b hb-escuro" aria-roledescription="slide" aria-label="3 de 6" aria-hidden="true">
+                <div class="hb-visual" aria-hidden="true">
+                    <span class="hb-arco"><img src="imagens-produtos-nana-4x5-cortadas/7014-camisola-regata-suede-ref-7014-camisola-regata-suede-01-4x5.webp" alt="" loading="lazy" width="1080" height="1350"></span>
+                    <span class="hb-arco hb-arco-menor"><img src="imagens-produtos-nana-4x5-cortadas/7029-baby-doll-blogueirinha-ref-7029-baby-doll-blogueirinha-8479-01-4x5.webp" alt="" loading="lazy" width="1080" height="1350"></span>
+                </div>
+                <div class="hb-texto">
+                    <p class="hb-rotulo">Linha Noite</p>
+                    <h2 class="hb-titulo">Noites mais leves, <em>do seu jeito.</em></h2>
+                    <p class="hb-sub">Camisolas, baby dolls e pijamas para a casa toda.</p>
+                    <div class="hb-acoes">
+                        <a class="hb-btn hb-btn-claro" href="#catalog-section" onclick="setCategory('linha-noite', event); scrollToProducts();" tabindex="-1">Ver Linha Noite</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- D · Casa toda -->
+            <article class="hb-slide hb-d" aria-roledescription="slide" aria-label="4 de 6" aria-hidden="true">
+                <div class="hb-visual" aria-hidden="true">
+                    <figure><span class="hb-pilula" style="--tom:#E9DCD2"><img src="imagens-produtos-nana-4x5-cortadas/7046-pijama-infantil-manga-ref-7046-pijama-infantil-manga-2061-01-4x5.webp" alt="" loading="lazy" width="1080" height="1350"></span><figcaption>Infantil</figcaption></figure>
+                    <figure class="hb-sobe"><span class="hb-pilula" style="--tom:#EDD3CE"><img src="imagens-produtos-nana-4x5-cortadas/7014-camisola-regata-suede-ref-7014-camisola-regata-suede-01-4x5.webp" alt="" loading="lazy" width="1080" height="1350"></span><figcaption>Feminino</figcaption></figure>
+                    <figure><span class="hb-pilula" style="--tom:#DCE0E6"><img src="imagens-produtos-nana-4x5-cortadas/7026-pijama-masculino-longo-ref-7026-pijama-masculino-longo-6732-01-4x5.webp" alt="" loading="lazy" width="1080" height="1350"></span><figcaption>Masculino</figcaption></figure>
+                </div>
+                <div class="hb-texto">
+                    <p class="hb-rotulo">Para todo mundo</p>
+                    <h2 class="hb-titulo">Tem peça pra <em>casa toda.</em></h2>
+                    <p class="hb-sub">Do infantil ao masculino, do P ao plus size.</p>
+                    <div class="hb-acoes">
+                        <a class="hb-btn" href="#catalog-section" onclick="setCategory('all', event); scrollToProducts();" tabindex="-1">Ver categorias</a>
+                    </div>
+                </div>
+            </article>
+
+            <!-- E · Como comprar -->
+            <article class="hb-slide hb-e hb-escuro" aria-roledescription="slide" aria-label="5 de 6" aria-hidden="true">
+                <div class="hb-texto">
+                    <p class="hb-rotulo">Como comprar</p>
+                    <h2 class="hb-titulo">Comprar é <em>simples assim.</em></h2>
+                    <div class="hb-acoes">
+                        <a class="hb-btn hb-btn-claro" href="#catalog-section" onclick="setCategory('all', event); scrollToProducts();" tabindex="-1">Começar pelo catálogo</a>
+                    </div>
+                </div>
+                <ol class="hb-visual hb-passos">
+                    <li><span class="hb-num">1</span><div><strong>Escolha no site</strong><span>Tamanho, quantidade e pronto: vai para a sacola.</span></div></li>
+                    <li><span class="hb-num">2</span><div><strong>Finalize no WhatsApp</strong><span>O pedido chega pronto e a equipe confirma com você.</span></div></li>
+                    <li><span class="hb-num">3</span><div><strong>Receba em casa</strong><span>Para todo o Brasil. Pix, cartão ou boleto.</span></div></li>
+                </ol>
+            </article>
+
+            <!-- F · Plus Size -->
+            <article class="hb-slide hb-f" aria-roledescription="slide" aria-label="6 de 6" aria-hidden="true">
+                <div class="hb-texto">
+                    <p class="hb-rotulo">Plus Size</p>
+                    <h2 class="hb-titulo">Conforto em <em>todos os tamanhos.</em></h2>
+                    <p class="hb-sub">Calças, baby dolls e lingerie com a mesma delicadeza, do G ao plus.</p>
+                    <div class="hb-acoes">
+                        <a class="hb-btn hb-btn-escuro" href="#catalog-section" onclick="setCategory('plus-size', event); scrollToProducts();" tabindex="-1">Ver Plus Size</a>
+                    </div>
+                </div>
+                <div class="hb-visual" aria-hidden="true">
+                    <span class="hb-f-grande"><img src="imagens-produtos-nana-4x5-cortadas/7035-baby-doll-joana-plus-baby-doll-joana-2047-01-4x5.webp" alt="" loading="lazy" width="1080" height="1350"></span>
+                    <span class="hb-f-pequena"><img src="imagens-produtos-nana-4x5-cortadas/2136-calca-culote-plus-ref-2136-calca-culote-plus-1118-01-4x5.webp" alt="" loading="lazy" width="1080" height="1350"></span>
+                </div>
+            </article>
         </div>
-        <div class="slider-dots" id="slider-dots">
-            <!-- Renderizado dinamicamente via JS -->
+
+        <div class="hb-controles">
+            <button type="button" class="hb-seta" id="hb-anterior" aria-label="Banner anterior">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+            </button>
+            <div class="hb-pontos" id="hb-pontos" role="group" aria-label="Escolher banner">
+                <button type="button" class="ativo" aria-label="Banner 1" aria-current="true"></button>
+                <button type="button" aria-label="Banner 2"></button>
+                <button type="button" aria-label="Banner 3"></button>
+                <button type="button" aria-label="Banner 4"></button>
+                <button type="button" aria-label="Banner 5"></button>
+                <button type="button" aria-label="Banner 6"></button>
+            </div>
+            <button type="button" class="hb-seta" id="hb-proximo" aria-label="Próximo banner">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
         </div>
     </section>
 
@@ -515,6 +626,6 @@
     <!-- Catálogo online e aplicação -->
     <script src="vendor/supabase.min.js?v=2.112.2"></script>
     <script src="supabase-config.js?v=1.0"></script>
-    <script src="app.min.js?v=6.0"></script>
+    <script src="app.min.js?v=7.0"></script>
 </body>
 </html>
