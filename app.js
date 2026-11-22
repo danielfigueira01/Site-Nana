@@ -3396,6 +3396,141 @@ function initSlider() {
     }
 }
 
+// --- Google Analytics (só depois do consentimento) e Instagram ---
+const NANA_CONSENT_KEY = 'nana_consent_analytics';
+let nanaAnalyticsOn = false;
+
+function nanaConfig() {
+    return window.NANA_CONFIG || {};
+}
+
+function readConsent() {
+    try { return localStorage.getItem(NANA_CONSENT_KEY); } catch (e) { return null; }
+}
+
+function saveConsent(value) {
+    try { localStorage.setItem(NANA_CONSENT_KEY, value); } catch (e) { /* navegador sem armazenamento */ }
+}
+
+function loadGoogleAnalytics(id) {
+    if (nanaAnalyticsOn || !/^G-[A-Z0-9]+$/.test(id)) return;
+    nanaAnalyticsOn = true;
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function gtag() { window.dataLayer.push(arguments); };
+    window.gtag('js', new Date());
+    window.gtag('config', id);
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`;
+    document.head.appendChild(script);
+}
+
+function nanaTrack(eventName, params) {
+    if (!nanaAnalyticsOn || typeof window.gtag !== 'function') return;
+    window.gtag('event', eventName, params || {});
+}
+
+function initAnalytics() {
+    const id = (nanaConfig().gaId || '').trim();
+    if (!id) return;
+
+    const aviso = document.getElementById('cookie-aviso');
+    const preferencias = document.getElementById('cookie-preferencias');
+    const choice = readConsent();
+
+    if (choice === 'granted') loadGoogleAnalytics(id);
+    if (!choice && aviso) aviso.hidden = false;
+    if (preferencias) preferencias.hidden = false;
+
+    document.getElementById('cookie-aceitar')?.addEventListener('click', () => {
+        saveConsent('granted');
+        aviso.hidden = true;
+        loadGoogleAnalytics(id);
+    });
+    document.getElementById('cookie-recusar')?.addEventListener('click', () => {
+        saveConsent('denied');
+        aviso.hidden = true;
+        if (nanaAnalyticsOn) window.location.reload();
+    });
+    preferencias?.addEventListener('click', (event) => {
+        event.preventDefault();
+        if (aviso) aviso.hidden = false;
+    });
+
+    // Cliques que viram conversão
+    document.addEventListener('click', (event) => {
+        const link = event.target.closest('a');
+        if (!link) return;
+        const href = link.getAttribute('href') || '';
+        if (/wa\.me|api\.whatsapp\.com/.test(href)) {
+            const area = link.closest('section, header, footer, [id]');
+            nanaTrack('contato_whatsapp', { local: (area && (area.id || area.className.split(' ')[0])) || 'site' });
+        } else if (link.dataset.evento) {
+            nanaTrack(link.dataset.evento);
+        } else if (link.classList.contains('hb-btn')) {
+            nanaTrack('clique_banner', { banner: link.textContent.trim() });
+        }
+    });
+}
+
+async function initInstagram() {
+    const grid = document.getElementById('insta-grade');
+    const feed = (nanaConfig().instagramFeed || '').trim();
+    if (!grid || !/^https:\/\/feeds\.behold\.so\/[A-Za-z0-9_-]+$/.test(feed)) return;
+
+    try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 8000);
+        const response = await fetch(feed, { signal: controller.signal });
+        clearTimeout(timer);
+        if (!response.ok) return;
+        const data = await response.json();
+        const posts = (Array.isArray(data) ? data : (data.posts || [])).slice(0, 3);
+        if (!posts.length) return;
+
+        grid.textContent = '';
+        posts.forEach((post) => {
+            const image = (post.sizes && post.sizes.medium && post.sizes.medium.mediaUrl)
+                || (post.mediaType === 'VIDEO' ? post.thumbnailUrl : post.mediaUrl);
+            const link = post.permalink;
+            if (!image || !/^https:\/\/(www\.)?instagram\.com\//.test(link || '')) return;
+
+            const li = document.createElement('li');
+            const a = document.createElement('a');
+            a.href = link;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.dataset.evento = 'instagram_post';
+            const caption = (post.prunedCaption || post.caption || '').replace(/\s+/g, ' ').trim();
+            a.setAttribute('aria-label', caption ? `Ver no Instagram: ${caption.slice(0, 90)}` : 'Ver postagem no Instagram');
+
+            const img = document.createElement('img');
+            img.src = image;
+            img.alt = '';
+            img.loading = 'lazy';
+            img.decoding = 'async';
+            a.appendChild(img);
+
+            if (post.mediaType === 'VIDEO') {
+                const badge = document.createElement('span');
+                badge.className = 'insta-video';
+                badge.setAttribute('aria-hidden', 'true');
+                a.appendChild(badge);
+            }
+            li.appendChild(a);
+            grid.appendChild(li);
+        });
+        if (grid.children.length) grid.hidden = false;
+    } catch (error) {
+        // Sem feed (limite do plano, rede, etc.): fica só o botão "Seguir".
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initAnalytics();
+    initInstagram();
+});
+
 // --- Carrossel de banners (HTML) ---
 function initBannerCarousel() {
     const root = document.getElementById('hero-banners');
@@ -3697,6 +3832,11 @@ function quickAddToCart(productId) {
 }
 
 function addToCart(product, size, qty) {
+    nanaTrack('add_to_cart', {
+        currency: 'BRL',
+        value: Number(product.price) * qty,
+        items: [{ item_id: String(product.id), item_name: product.name, item_variant: size, price: Number(product.price), quantity: qty }]
+    });
     const cartItemId = `${product.id}-${size}`;
     const existingItem = cart.find(item => item.id === cartItemId);
     
@@ -4004,6 +4144,13 @@ function submitCheckout(event) {
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://api.whatsapp.com/send?phone=5522988524928&text=${encodedMessage}`;
     
+    nanaTrack('generate_lead', {
+        currency: 'BRL',
+        value: getCartSubtotal(),
+        forma_pagamento: pagamento,
+        itens: cart.reduce((total, item) => total + item.quantity, 0)
+    });
+
     closeCheckoutModal();
     
     const whatsappWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');

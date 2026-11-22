@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="referrer" content="strict-origin-when-cross-origin">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://ofarjltaoohnfyxbnuxx.supabase.co; form-action 'self'; upgrade-insecure-requests">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; base-uri 'self'; object-src 'none'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://ofarjltaoohnfyxbnuxx.supabase.co https://feeds.behold.so https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; form-action 'self'; upgrade-insecure-requests">
     
     <!-- SEO Meta Tags -->
     <title>Nana Moda Íntima - Conforto e Praticidade</title>
@@ -32,7 +32,7 @@
     <link rel="preload" href="fonts/montserrat-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
     
     <!-- CSS Link -->
-    <link rel="stylesheet" href="index.min.css?v=7.1">
+    <link rel="stylesheet" href="index.min.css?v=7.2">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -370,6 +370,22 @@
         </section>
     </main>
 
+    <!-- --- Instagram --- -->
+    <section class="container insta" id="instagram" aria-labelledby="insta-titulo">
+        <div class="insta-cabeca">
+            <div>
+                <p class="insta-rotulo">No Instagram</p>
+                <h2 id="insta-titulo">Siga @nana_modaintima</h2>
+                <p class="insta-sub">Lançamentos, novidades e os modelos no corpo de verdade.</p>
+            </div>
+            <a class="insta-btn" href="https://www.instagram.com/nana_modaintima/" target="_blank" rel="noopener noreferrer" data-evento="instagram_seguir">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+                Seguir no Instagram
+            </a>
+        </div>
+        <ul class="insta-grade" id="insta-grade" hidden></ul>
+    </section>
+
     <!-- --- Help Section --- -->
     <section class="container" style="margin-bottom: 5rem;">
         <div class="help-cta-banner">
@@ -410,6 +426,7 @@
                     <li><a href="#" onclick="openHowItWorksModal(event)">Como comprar</a></li>
                     <li><a href="termos-de-uso.html">Trocas e atendimento</a></li>
                     <li><a href="politica-de-privacidade.html">Política de privacidade</a></li>
+                    <li><a href="#" id="cookie-preferencias" hidden>Preferências de cookies</a></li>
                     <li><a href="mailto:nanamodaintima@hotmail.com">Fale conosco</a></li>
                 </ul>
             </div>
@@ -627,8 +644,23 @@
     </a>
 
     <!-- Catálogo online e aplicação -->
+    <div class="cookie-aviso" id="cookie-aviso" role="region" aria-label="Aviso de cookies" hidden>
+        <p>Usamos cookies do Google Analytics para entender como o site é usado e melhorar sua experiência. <a href="politica-de-privacidade.html#estatisticas">Saiba mais</a></p>
+        <div class="cookie-acoes">
+            <button type="button" class="cookie-btn cookie-recusar" id="cookie-recusar">Recusar</button>
+            <button type="button" class="cookie-btn cookie-aceitar" id="cookie-aceitar">Aceitar</button>
+        </div>
+    </div>
+
+    <!-- Configurações do site: ID do Google Analytics (G-...) e feed JSON do Behold -->
+    <script>
+        window.NANA_CONFIG = {
+            gaId: '',
+            instagramFeed: ''
+        };
+    </script>
     <script src="vendor/supabase.min.js?v=2.112.2"></script>
     <script src="supabase-config.js?v=1.0"></script>
-    <script src="app.min.js?v=7.1"></script>
+    <script src="app.min.js?v=7.2"></script>
 </body>
 </html>
