@@ -148,7 +148,7 @@ header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 0;
+    padding: 18px 24px;
 }
 
 .logo-area {
@@ -2145,30 +2145,6 @@ footer {
     }
 }
 
-/* --- Efeito de Zoom Magnificador no Produto --- */
-.zoom-result-box {
-    display: none;
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: calc(50% - 15px);
-    height: 100%;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-md);
-    overflow: hidden;
-    background-color: white;
-    z-index: 10;
-    background-repeat: no-repeat;
-    box-shadow: var(--shadow-md);
-    pointer-events: none;
-}
-
-@media (max-width: 991px) {
-    .zoom-result-box {
-        display: none !important;
-    }
-}
-
 .gallery-photo-card {
     cursor: pointer;
     border: 1px solid var(--border-color);
@@ -2191,4 +2167,289 @@ footer {
 .gallery-photo-card.active {
     border-color: var(--primary-color) !important;
     box-shadow: 0 0 0 2px rgba(185, 124, 120, 0.25);
+}
+
+
+/* =========================================================
+   v6 — Acabamento profissional
+   ========================================================= */
+
+/* Logo transparente e mais proporcional */
+.logo-img {
+    height: 76px;
+    width: auto;
+}
+
+.sidebar-filters {
+    top: 200px;
+}
+
+.nav-link-how {
+    color: var(--accent-color);
+    font-weight: 700;
+    border-left: 1px solid var(--border-color);
+    padding-left: 15px;
+    margin-left: 10px;
+}
+
+/* Introdução do catálogo */
+.catalog-intro {
+    margin-top: 3rem;
+    margin-bottom: 2.5rem;
+    text-align: center;
+}
+
+.catalog-intro-text {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    line-height: 1.65;
+    max-width: 650px;
+    margin: 1.5rem auto 0;
+    font-weight: 500;
+}
+
+/* Faixa de confiança */
+.trust-strip {
+    margin-top: -3rem;
+    background-color: var(--bg-off-white);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.trust-strip-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    padding: 20px 24px;
+}
+
+.trust-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-color);
+}
+
+.trust-item svg {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    padding: 9px;
+    border-radius: 50%;
+    background-color: var(--bg-secondary);
+    fill: var(--accent-color);
+}
+
+.trust-item strong {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+    line-height: 1.3;
+}
+
+.trust-item span {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.35;
+}
+
+a.trust-item:hover strong {
+    color: var(--accent-color);
+}
+
+/* Filtros recolhíveis em telas menores */
+.filters-toggle {
+    display: none;
+}
+
+/* Zoom da foto dentro do próprio quadro */
+.main-image-container.zoomable {
+    cursor: zoom-in;
+}
+
+.main-image-container.zoomable img {
+    transition: transform 0.25s ease;
+}
+
+.main-image-container.zoomable.is-zoomed img {
+    transform: scale(2);
+}
+
+@media (max-width: 1024px) {
+    .trust-strip-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .sidebar-filters {
+        padding: 0;
+        box-shadow: none;
+    }
+
+    .filters-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 14px 18px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: var(--primary-dark);
+        background: transparent;
+        border-radius: var(--border-radius-md);
+    }
+
+    .filters-toggle svg {
+        width: 18px;
+        height: 18px;
+        fill: currentColor;
+    }
+
+    .filters-body {
+        display: none;
+        padding: 0 20px 20px;
+    }
+
+    .sidebar-filters.is-open .filters-body {
+        display: block;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Cabeçalho compacto: logo + ações numa linha, busca embaixo */
+    .header-top {
+        padding: 6px 12px;
+        font-size: 0.72rem;
+    }
+
+    .header-top .container > span {
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .header-main {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        grid-template-areas:
+            "logo actions"
+            "search search";
+        flex-direction: unset;
+        align-items: center;
+        gap: 8px 12px;
+        padding: 8px 16px 10px;
+    }
+
+    .logo-area {
+        grid-area: logo;
+        justify-content: flex-start;
+    }
+
+    .logo-img {
+        height: 42px;
+    }
+
+    .header-actions {
+        grid-area: actions;
+        justify-content: flex-end;
+        margin-top: 0;
+        gap: 10px;
+    }
+
+    .header-whatsapp-btn {
+        padding: 9px;
+        border-radius: 50%;
+    }
+
+    .header-whatsapp-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .header-whatsapp-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+        white-space: nowrap;
+    }
+
+    .search-bar {
+        grid-area: search;
+        padding: 7px 14px;
+    }
+
+    .search-bar input {
+        font-size: 16px; /* evita zoom automático no iPhone */
+    }
+
+    .nav-link {
+        padding: 10px 14px;
+    }
+
+    /* Banner próprio para celular */
+    .hero-slider {
+        aspect-ratio: 1080 / 652;
+        margin-bottom: 3rem;
+    }
+
+    .slide-bg {
+        background-image: var(--slide-bg-mobile) !important;
+    }
+
+    .trust-strip-grid {
+        gap: 14px 12px;
+        padding: 16px;
+    }
+
+    .trust-item {
+        gap: 9px;
+    }
+
+    .trust-item svg {
+        width: 34px;
+        height: 34px;
+        padding: 7px;
+    }
+
+    .trust-item strong {
+        font-size: 0.8rem;
+    }
+
+    .trust-item span {
+        font-size: 0.72rem;
+    }
+
+    .catalog-intro {
+        margin-top: 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .catalog-intro-text {
+        font-size: 0.95rem;
+        margin-top: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Duas peças por linha no celular, como nas lojas grandes */
+    .products-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .product-btn-add {
+        font-size: 0.78rem;
+        padding-left: 6px;
+        padding-right: 6px;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-top-extra {
+        display: none;
+    }
 }

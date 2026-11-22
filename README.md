@@ -14,7 +14,7 @@ npm test
 
 ## Administração
 
-O link **Painel administrativo** no rodapé abre `admin.html`. O painel usa autenticação, banco de dados e armazenamento de imagens do Supabase; somente a conta administrativa autorizada pode alterar o catálogo. As alterações salvas aparecem na loja online em qualquer dispositivo.
+O painel fica em `https://nanamodaintima.com.br/admin.html` (o link não aparece mais no site público; guarde o endereço nos favoritos). O painel usa autenticação, banco de dados e armazenamento de imagens do Supabase; somente a conta administrativa autorizada pode alterar o catálogo. As alterações salvas aparecem na loja online em qualquer dispositivo.
 
 No primeiro acesso, a administradora informa o e-mail autorizado, cria uma senha com pelo menos oito caracteres e confirma o e-mail recebido. Depois disso, basta entrar normalmente no painel.
 
