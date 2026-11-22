@@ -2924,7 +2924,7 @@ const PRODUCTS_DATA = [
 // Versão vertical/compacta do banner para celular (o texto do banner fica legível).
 function getBannerMobileImage(banner) {
     if (banner && banner.mobileImage) return banner.mobileImage;
-    if (banner && /banner_generico\.(webp|png|jpg)$/.test(banner.image || '')) return 'banner_generico_mobile.webp';
+    if (banner && /banner_(generico|pecas)\.(webp|png|jpg)$/.test(banner.image || '')) return 'banner_pecas.webp';
     return banner ? banner.image : '';
 }
 
@@ -2934,8 +2934,7 @@ const BANNERS_DATA = [
         id: 1,
         title: "Nana Moda Íntima",
         text: "Conforto, beleza e elegância para todos os momentos. Escolha suas peças favoritas e finalize seu pedido pelo WhatsApp de forma simples, rápida e segura.",
-        image: "banner_generico.webp",
-        mobileImage: "banner_generico_mobile.webp"
+        image: "banner_pecas.webp"
     }
 ];
 
@@ -2946,8 +2945,13 @@ function loadBanners() {
         const stored = localStorage.getItem('nana_banners_v5') || localStorage.getItem('nana_banners_v4');
         if (stored) {
             banners = JSON.parse(stored);
-            const isLegacyDefault = banners.length === 1 && banners[0]?.image === 'banner_generico.png';
-            if (isLegacyDefault) banners[0].image = 'banner_generico.webp';
+            // Banner antigo (com texto dentro da arte) vira a foto limpa das peças
+            banners.forEach(b => {
+                if (b && /^banner_generico(_mobile)?\.(png|webp)$/.test(b.image || '')) {
+                    b.image = 'banner_pecas.webp';
+                    delete b.mobileImage;
+                }
+            });
             localStorage.setItem('nana_banners_v5', JSON.stringify(banners));
         } else {
             banners = [...BANNERS_DATA];
