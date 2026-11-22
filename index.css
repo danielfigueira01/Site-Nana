@@ -2455,34 +2455,18 @@ a.trust-item:hover strong {
 }
 
 /* =========================================================
-   v7 — Carrossel de banners (Bodoni Moda + Jost)
+   v7 — Carrossel de banners (Montserrat)
    ========================================================= */
 @font-face {
-    font-family: "Bodoni Moda";
-    src: url("fonts/bodoni-moda-latin-opsz-normal.woff2") format("woff2");
-    font-weight: 400 900;
-    font-style: normal;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "Bodoni Moda";
-    src: url("fonts/bodoni-moda-latin-opsz-italic.woff2") format("woff2");
-    font-weight: 400 900;
-    font-style: italic;
-    font-display: swap;
-}
-
-@font-face {
-    font-family: "Jost";
-    src: url("fonts/jost-latin-wght-normal.woff2") format("woff2");
+    font-family: "Montserrat";
+    src: url("fonts/montserrat-latin-wght-normal.woff2") format("woff2");
     font-weight: 100 900;
     font-display: swap;
 }
 
 .hb {
-    --hb-display: "Bodoni Moda", Didot, "Times New Roman", Georgia, serif;
-    --hb-texto: "Jost", Futura, "Century Gothic", system-ui, sans-serif;
+    --hb-display: "Montserrat", "Segoe UI", system-ui, sans-serif;
+    --hb-texto: "Montserrat", "Segoe UI", system-ui, sans-serif;
     --hb-acento: #9D5F5C;
     --hb-tinta: #3E2725;
     --hb-suave: #6E5A55;
@@ -2538,7 +2522,7 @@ a.trust-item:hover strong {
 
 .hb-rotulo {
     margin: 0;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     letter-spacing: 0.14em;
     text-transform: uppercase;
@@ -2548,16 +2532,16 @@ a.trust-item:hover strong {
 .hb-titulo {
     margin: 0;
     font-family: var(--hb-display);
-    font-weight: 500;
-    font-size: clamp(40px, 4.4vw, 64px);
-    line-height: 1.04;
-    letter-spacing: -0.005em;
+    font-weight: 600;
+    font-size: clamp(36px, 4vw, 58px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
     color: var(--hb-tinta);
     text-wrap: balance;
 }
 
 .hb-titulo em {
-    font-style: italic;
+    font-style: normal;
     color: var(--hb-acento);
 }
 
@@ -2676,8 +2660,8 @@ a.trust-item:hover strong {
 
 .hb-etiqueta strong {
     font-family: var(--hb-display);
-    font-size: 26px;
-    font-weight: 500;
+    font-size: 24px;
+    font-weight: 700;
     color: var(--hb-tinta);
 }
 
@@ -2699,8 +2683,9 @@ a.trust-item:hover strong {
 }
 
 .hb-preco strong {
-    font-size: clamp(76px, 8.9vw, 128px);
-    font-weight: 500;
+    font-size: clamp(72px, 8.3vw, 120px);
+    font-weight: 700;
+    letter-spacing: -0.03em;
     line-height: 0.95;
     color: var(--hb-acento);
     white-space: nowrap;
@@ -2867,8 +2852,8 @@ a.trust-item:hover strong {
 
 .hb-passos strong {
     font-family: var(--hb-display);
-    font-size: clamp(21px, 1.8vw, 26px);
-    font-weight: 500;
+    font-size: clamp(18px, 1.6vw, 22px);
+    font-weight: 600;
     line-height: 1.1;
 }
 
@@ -3003,7 +2988,7 @@ a.trust-item:hover strong {
     }
 
     .hb-rotulo { font-size: 11px; }
-    .hb-titulo { font-size: clamp(32px, 9.5vw, 40px); }
+    .hb-titulo { font-size: clamp(30px, 8.6vw, 36px); }
     .hb-sub, .hb-link, .hb-nota { display: none; }
     .hb-btn { min-height: 44px; padding: 11px 24px; font-size: 15px; }
 
@@ -3041,7 +3026,7 @@ a.trust-item:hover strong {
     .hb-passos li { flex-direction: row; align-items: center; gap: 14px; min-height: 0; padding: 14px 16px; border-radius: 18px; }
     .hb-passos li > div { gap: 2px; }
     .hb-num { flex: none; width: 40px; height: 40px; font-size: 18px; }
-    .hb-passos strong { font-size: 19px; }
+    .hb-passos strong { font-size: 17px; }
     .hb-passos span:not(.hb-num) { font-size: 13px; }
 
     /* F */
@@ -3052,4 +3037,13 @@ a.trust-item:hover strong {
     /* Controles */
     .hb-controles { bottom: 12px; }
     .hb-seta { display: none; }
+}
+
+/* v7.1 — botão de pausa do carrossel */
+.hb-pausa .icone-play { display: none; }
+.hb-pausa.pausado .icone-pausa { display: none; }
+.hb-pausa.pausado .icone-play { display: block; }
+
+@media (max-width: 900px) {
+    .hb-controles .hb-pausa { display: flex; width: 32px; height: 32px; }
 }
